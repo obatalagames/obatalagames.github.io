@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en" data-i18n-title="meta.title.dashboard">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#070b16" />
+    <meta name="description" content="ChestPlayer — fast trivia, friendly competition, and scheduled five-player matches." />
+    <meta http-equiv="Permissions-Policy" content="camera=(self), microphone=(self), geolocation=()" />
+    <title>ChestPlayer · Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="dashboard-page" data-page="dashboard">
+    <div class="ambient ambient-a"></div>
+    <div class="ambient ambient-b"></div>
+    <div class="ambient ambient-c"></div>
+
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Primary navigation">
+        <div class="brand-lockup">
+          <div class="brand-mark" aria-label="ChestPlayer Zeus mark"><span></span><span></span><span></span><b class="zeus-bolt">ϟ</b></div>
+          <div>
+            <p class="eyebrow">CHESTPLAYER</p>
+            <h1>CHEST<span>PLAYER</span></h1>
+          </div>
+        </div>
+
+        <div class="demo-badge"><span class="pulse-dot"></span> <span id="environmentBadge">Play live</span></div>
+
+        <nav class="nav-stack">
+          <button class="nav-item active" data-view="arena"><span class="nav-icon">◈</span><span data-i18n="nav.arena">Arena</span></button>
+          <button class="nav-item" data-view="flash"><span class="nav-icon">↯</span><span data-i18n="nav.flash">10-10 Flash Trivia</span></button>
+          <button class="nav-item" data-view="box"><span class="nav-icon">▦</span><span data-i18n="nav.scheduled">Scheduled matches</span></button>
+          <button class="nav-item" data-view="wallet"><span class="nav-icon">▣</span><span data-i18n="nav.wallet">Wallet &amp; payouts</span></button>
+          <button class="nav-item" data-view="security"><span class="nav-icon">◇</span><span>Fair play</span></button>
+          <button class="nav-item" data-view="faq"><span class="nav-icon">?</span><span data-i18n="nav.faq">FAQ</span></button>
+        </nav>
+
+        <div class="sidebar-bottom">
+          <div class="system-card">
+            <div class="system-card-head"><span class="status-dot"></span> Ready when you are</div>
+            <div class="system-row"><span>Ways to play</span><strong>2</strong></div>
+            <div class="meter"><span style="width: 65%"></span></div>
+            <p>Quick duels or a five-player challenge.</p>
+          </div>
+          <div class="user-chip" id="sidebarUser">
+            <div class="avatar">?</div>
+            <div><strong>Not connected</strong><span>Sign in to continue</span></div>
+            <button class="icon-button" aria-label="Open account menu">⋯</button>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="environmentEyebrow">PLAY LIVE · CENTRAL TIME</p>
+            <h2 id="pageTitle">Knowledge under pressure.</h2>
+          </div>
+          <div class="topbar-actions">
+            <span class="network-chip"><span class="chain-dot"></span> <span id="networkLabel">USDT play</span></span>
+            <button class="outline-button" data-view="security">Fair play</button>
+            <label class="locale-picker" for="localeSelect"><span data-i18n="language">Language</span><select id="localeSelect" aria-label="Language"><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="it">Italiano</option><option value="el">Ελληνικά</option><option value="de">Deutsch</option><option value="cs">Čeština</option><option value="pl">Polski</option><option value="tr">Türkçe</option><option value="ru">Русский</option></select></label>
+            <button class="auth-trigger" id="authTrigger" type="button"><span class="auth-trigger-icon">◈</span><span id="authTriggerLabel">Sign in / Sign up</span></button>
+          </div>
+        </header>
+
+        <section class="view active" id="arenaView" aria-labelledby="pageTitle">
+          <div class="hero-panel">
+            <div class="hero-copy">
+              <div class="kicker"><span class="spark">✦</span> TRIVIA WITH A LITTLE PRESSURE</div>
+              <h3>Think fast.<br /><em>Play fair.</em></h3>
+              <p>Quick questions, big moments, and a five-player board where every choice matters.</p>
+              <div class="hero-actions">
+                <button class="primary-button" data-view="flash">Find a 10-10 match <span>→</span></button>
+                <button class="text-button" data-view="box">View scheduled matches <span>↗</span></button>
+              </div>
+              <div class="hero-micro"><span><i class="mini-dot green-dot"></i> 10-second turns</span><span><i class="mini-dot purple-dot"></i> synonym-friendly answers</span><span><i class="mini-dot gold-dot"></i> clear payouts</span></div>
+            </div>
+            <div class="hero-orbit" aria-hidden="true">
+              <div class="orbit-ring ring-one"></div>
+              <div class="orbit-ring ring-two"></div>
+              <div class="orbit-ring ring-three"></div>
+              <div class="orbit-core"><span>Q</span><small>LOCKED</small></div>
+              <div class="orbit-label label-one">10 SEC<br /><strong>FLASH</strong></div>
+              <div class="orbit-label label-two">5 × 5<br /><strong>BOX</strong></div>
+              <div class="orbit-label label-three">20<br /><strong>SLOTS</strong></div>
+            </div>
+          </div>
+
+          <section class="daily-gift panel" aria-labelledby="dailyGiftTitle">
+            <div class="daily-wheel-wrap" aria-label="Olympian daily gift wheel">
+              <div class="daily-wheel-pointer">▼</div>
+              <div class="daily-wheel" id="dailyGiftWheel">
+                <span class="wheel-god wheel-zeus" data-wheel-god="zeus">ϟ<small>ZEUS</small></span>
+                <span class="wheel-god wheel-athena" data-wheel-god="athena">☉<small>ATHENA</small></span>
+                <span class="wheel-god wheel-poseidon" data-wheel-god="poseidon">♆<small>POSEIDON</small></span>
+                <span class="wheel-god wheel-ares" data-wheel-god="ares">⚔<small>ARES</small></span>
+                <span class="wheel-god wheel-hermes" data-wheel-god="hermes">➹<small>HERMES</small></span>
+                <span class="daily-wheel-core">ϟ</span>
+              </div>
+            </div>
+            <div class="daily-gift-copy">
+              <p class="eyebrow">DAILY OLYMPIAN GIFT</p>
+              <h3 id="dailyGiftTitle">Spin the gods. Claim today’s blessing.</h3>
+              <p>One free spin each day. You may receive a free $5 game, a free token, nothing, or 5% extra tokens on your next deposit.</p>
+              <div class="daily-blessing"><span class="daily-god-animation" id="dailyGodAnimation" aria-hidden="true">ϟ</span><span>Which god will guide your next game?</span></div>
+              <div class="daily-god-row" id="dailyGodRow" aria-label="Greek gods in the daily gift draw"><span data-god="zeus">Zeus</span><span data-god="athena">Athena</span><span data-god="poseidon">Poseidon</span><span data-god="ares">Ares</span><span data-god="hermes">Hermes</span></div>
+            </div>
+            <div class="daily-gift-action"><div class="gift-result" id="dailyGiftResult"><span class="gift-result-label">TODAY’S GIFT</span><strong>Ready to spin</strong><small>Your result is saved automatically.</small></div><button class="primary-button gift-spin-button" id="dailyGiftSpin" type="button"><span>ϟ</span> Spin daily gift</button></div>
+          </section>
+
+          <div class="section-heading" id="formats">
+            <div><p class="eyebrow">CHOOSE YOUR PRESSURE</p><h3>Pick your match</h3></div>
+            <div class="section-actions"><span class="live-indicator"><span></span> rooms open now</span><button class="filter-button" data-view="faq">How it works ↗</button></div>
+          </div>
+
+          <div class="format-grid">
+            <article class="format-card flash-format">
+              <div class="format-topline"><span class="category-pill teal-pill">QUICK DUEL · LIVE</span><span class="format-symbol">↯</span></div>
+              <h4>10-10 Flash Trivia</h4>
+              <p data-i18n="flash.cardCopy">Ten multiple-choice questions, one ten-second attempt each. A miss simply moves the game on.</p>
+              <div class="rule-row"><span><b>10</b> questions</span><span><b>10s</b> each</span><span><b>1v1</b> turns</span></div>
+              <div class="format-footer"><div><small>ENTRY RANGE</small><strong>$5 — $50</strong></div><button class="small-primary" data-view="flash">Find a match <span>→</span></button></div>
+            </article>
+            <article class="format-card box-format">
+              <div class="format-topline"><span class="category-pill purple-pill">SCHEDULED · 5 SEATS</span><span class="format-symbol">▦</span></div>
+              <h4>5x5 ChestPlayer</h4>
+              <p>Pick a category tile, protect the lead, and make every 10-second attempt count.</p>
+              <div class="rule-row"><span><b>25</b> clues</span><span><b>10s</b> each try</span><span><b>5</b> players</span></div>
+              <div class="format-footer"><div><small>FIXED ENTRY</small><strong>$100 USDT</strong></div><button class="small-purple" data-view="box">View scheduled rooms <span>→</span></button></div>
+            </article>
+          </div>
+
+          <section class="lobby-strip panel" id="nextScheduledCard"><div class="lobby-copy"><p class="eyebrow">NEXT SCHEDULED MATCH · CENTRAL TIME</p><h3 id="nextScheduledTitle">Sign in to see the next room</h3><p id="nextScheduledCopy">Five seats, a $100 entry, and a fresh board every two hours.</p></div><div class="lobby-metrics" id="nextScheduledMetrics"><span><b>—</b> seats reserved</span><span><b>—</b> next start</span></div><button class="small-purple" data-view="box">View scheduled matches <span>→</span></button></section>
+        </section>
+
+        <section class="view" id="flashView" aria-labelledby="flashTitle">
+          <div class="view-heading"><div><p class="eyebrow">LIVE 1V1 FORMAT</p><h3 id="flashTitle">10-10 Flash Trivia</h3><p data-i18n="flash.copy">Ten easy-to-medium questions. Each question has one ten-second attempt.</p></div><button class="primary-button" data-view="flash">Refresh match market <span>↻</span></button></div>
+          <div class="rule-strip"><div><span class="rule-number">01</span><strong data-i18n="flash.answerFirst">Answer fast</strong><small data-i18n="flash.answerFirstCopy">The active player gets one ten-second window.</small></div><div><span class="rule-number">02</span><strong data-i18n="flash.skipMiss">Misses move on</strong><small data-i18n="flash.skipMissCopy">Incorrect answers and timeouts end that question.</small></div><div><span class="rule-number">03</span><strong data-i18n="flash.continue">Keep going</strong><small data-i18n="flash.continueCopy">The next question begins for the other player.</small></div></div>
+          <div class="flash-layout"><section class="panel format-detail"><div class="detail-label teal-text">FLASH FORMAT</div><div class="detail-number">10<span>Q</span></div><h4>Short, fair, and replayable.</h4><p>Fresh questions, a clear clock, and friendly answer matching make every duel easy to follow.</p><div class="detail-list"><div><span>Question style</span><b>Random fan topics</b></div><div><span>Entry</span><b>$5–$50 USDT</b></div><div><span>Attempt window</span><b>10 seconds</b></div><div><span>Answer matching</span><b>Case-insensitive</b></div></div></section><section class="panel preview-callout"><div class="callout-orb">↯</div><p class="eyebrow">LIVE MATCHMAKING</p><h4>Find your next rival</h4><p>Choose a category, set your entry, and join another trivia fan who is ready to play.</p><button class="small-primary" data-view="flash">Load Flash market <span>→</span></button><div class="preview-note"><span class="status-dot"></span> Your score and balance stay up to date.</div></section></div>
+          <section class="panel flash-market-panel" aria-labelledby="flashMarketTitle"><div class="panel-heading"><div><p class="eyebrow">MATCHMAKING · $5–$50</p><h3 id="flashMarketTitle">Flash match market</h3></div><span class="secure-badge">OFFER / ACCEPT</span></div><p class="market-copy">Browse players looking for a 10-10 in each category. Match their entry or send an offer they can accept or decline.</p><div class="market-category-strip" id="flashCategoryStrip" aria-label="Flash categories"></div><div class="market-controls"><label class="input-label" for="flashMarketCategory">Category</label><select id="flashMarketCategory"><option value="us_football">US football</option><option value="us_pop_culture">US pop culture</option><option value="eu_soccer">EU soccer</option><option value="sa_soccer">South America soccer</option><option value="combat_sports">Combat sports</option><option value="music">Music</option><option value="gaming">Gaming</option><option value="film_tv">Film &amp; TV</option></select><label class="input-label" for="flashMarketAmount">Your entry</label><div class="market-amount"><span>$</span><input id="flashMarketAmount" type="number" min="5" max="50" step="0.000001" value="10" /><span>USDT</span></div><button class="small-primary" id="seekFlashMatch">Seek a match</button></div><div class="market-grid" id="flashMarketGrid"></div><div class="market-grid" id="flashOfferGrid"></div><div class="market-footnote"><span class="status-dot"></span> Players and offers update as the room fills.</div></section>
+        </section>
+
+        <section class="view" id="boxView" aria-labelledby="boxTitle">
+          <div class="view-heading"><div><p class="eyebrow">SCHEDULED FORMAT · 5 PLAYERS</p><h3 id="boxTitle">5x5 ChestPlayer</h3><p>A Jeopardy-style category grid with a fixed $100 entry and five seats at the table.</p></div><button class="small-purple large-action" data-view="box">Refresh scheduled rooms <span>↻</span></button></div>
+          <div class="box-summary-grid"><article class="box-stat"><span>ENTRY</span><strong>$100</strong><small>fixed for launch</small></article><article class="box-stat"><span>SEATS</span><strong>5</strong><small>exactly required</small></article><article class="box-stat"><span>CLUES</span><strong>25</strong><small>five by five</small></article><article class="box-stat"><span>POOL</span><strong>$400</strong><small>after 20% fee</small></article></div>
+          <div class="box-layout"><section class="panel board-preview-panel"><div class="panel-heading"><div><p class="eyebrow">SCHEDULED ROOMS</p><h3>Available matches</h3></div><span class="secure-badge purple-badge">LIVE ROOM</span></div><div class="server-list" id="scheduledMatchList"><div class="empty-prompt"><strong>Sign in to see scheduled matches.</strong><p>Join the next five-player room when it appears.</p></div></div><p class="board-caption"><span class="mini-dot purple-dot"></span> Clues are revealed one at a time during the match.</p></section><section class="panel box-steps"><p class="eyebrow">A CHESTPLAYER TURN</p><div class="box-step"><span>1</span><div><strong>Choose a tile</strong><small>The current player picks any available category and value.</small></div></div><div class="box-step"><span>2</span><div><strong>Five tries max</strong><small>Wrong or timeout passes the same clue onward.</small></div></div><div class="box-step"><span>3</span><div><strong>Build your score</strong><small>A correct answer earns the tile and the next choice rotates.</small></div></div><div class="cancel-note"><span>!</span><div><strong>Five seats required</strong><small>If the room is not full, everyone gets their entry back.</small></div></div></section></div>
+        </section>
+
+        <section class="view" id="walletView" aria-labelledby="walletTitle">
+          <div class="view-heading"><div><p class="eyebrow">FUNDS &amp; PAYOUTS</p><h3 id="walletTitle">Wallet and payouts</h3><p>Keep your balance in one place and request payouts to your saved wallet.</p></div><span class="wallet-lock">⌁ Wallet on file</span></div>
+          <div class="wallet-layout"><section class="panel balance-panel"><div class="eyebrow">AVAILABLE BALANCE</div><div class="big-balance" id="availableBalance">— <span>USDT</span></div><div class="balance-sub"><span>Reserved in matches</span><strong id="reservedBalance">—</strong></div><div class="balance-sub"><span>Account status</span><strong id="accountStatus">Not connected</strong></div><div class="balance-sub"><span>Promotional credits</span><strong id="giftCredits">—</strong></div><div class="wallet-address"><span class="chain-dot"></span><div><small>SAVED PAYOUT WALLET</small><strong id="linkedWallet">—</strong></div><button class="copy-button" id="copyWallet" type="button">Copy</button></div><div class="locked-note"><span>⌁</span><span>Your payout destination is saved during setup and cannot be changed from the account.</span></div></section><section class="panel payout-panel"><div class="panel-heading"><div><p class="eyebrow">PAYOUT REQUEST</p><h3>Request payout</h3></div><span class="review-badge">PERSONAL REVIEW</span></div><label class="input-label" for="payoutAmount">Amount</label><div class="amount-input"><span>$</span><input id="payoutAmount" type="number" min="0.000001" step="0.000001" placeholder="0.00" inputmode="decimal" /><span class="unit">USDT</span></div><label class="input-label" for="payoutSourceMatch">Winning scheduled match <span class="optional-label">optional</span></label><select id="payoutSourceMatch" class="payout-source-select"><option value="">No scheduled-match source</option></select><p class="field-help">Choose the match connected to this payout so our team can review it quickly.</p><div class="payout-tier kyc-required" id="payoutTier"><div class="tier-icon">✓</div><div><strong>Identity check required</strong><span>Every payout includes a quick manual identity review.</span></div><span class="tier-tag">REQUIRED</span></div><div class="code-field"><label class="input-label" for="cashoutCode">Cashout code</label><div class="secret-input"><input id="cashoutCode" type="password" placeholder="Enter saved cashout code" aria-label="Cashout code" autocomplete="off" /><span>⌑</span></div></div><button class="primary-button full-width" id="submitPayout">Submit payout request <span>→</span></button><p class="fine-print">Payouts are reviewed before they are sent to your saved wallet.</p></section></div>
+          <section class="panel deposit-panel"><div class="panel-heading"><div><p class="eyebrow">ADD FUNDS</p><h3>Deposit USDT</h3></div><span class="secure-badge">CHECK BEFORE SENDING</span></div><p class="market-copy">Sign in to receive the current deposit address and token details. Always copy the address shown here and use the matching network—crypto transfers cannot be reversed.</p><div class="deposit-list" id="depositInstructions"><div class="empty-prompt"><strong>Sign in to see deposit details.</strong><p>Your current deposit address will appear here.</p></div></div><div class="deposit-warning"><span>!</span><span>Only send the exact token and network shown in your account.</span></div></section>
+          <section class="panel payout-history"><div class="panel-heading"><div><p class="eyebrow">ACTIVITY</p><h3>Withdrawal requests</h3></div><span class="secure-badge">YOUR ACTIVITY</span></div><div class="history-table" id="payoutHistory"><div class="empty-prompt"><strong>Sign in to see your payout activity.</strong></div></div></section>
+          <section class="panel onboarding-panel" hidden aria-hidden="true"></section>
+        </section>
+
+        <section class="view" id="securityView" aria-labelledby="securityTitle">
+          <div class="view-heading"><div><p class="eyebrow">PLAY WITH CONFIDENCE</p><h3 id="securityTitle">Fair play, clear rules</h3><p>Everything is designed to keep the focus on the question in front of you.</p></div><span class="secure-badge">FAIR PLAY</span></div>
+          <div class="policy-grid"><article class="panel policy-card"><span class="policy-number">01</span><h4>One clear clock</h4><p>Every attempt has the same visible time limit, so both players know exactly when to answer.</p><div class="policy-line"><span>Each turn</span><strong>10 seconds</strong></div></article><article class="panel policy-card"><span class="policy-number">02</span><h4 data-i18n="dashboard.missedTitle">Misses move on</h4><p data-i18n="dashboard.missedCopy">A wrong answer or timeout closes that question. The opponent does not get another try, and the correct answer is not shown.</p><div class="policy-line"><span data-i18n="dashboard.missedLabel">Missed Flash question</span><strong data-i18n="dashboard.skipped">Skipped</strong></div></article><article class="panel policy-card"><span class="policy-number">03</span><h4>Private match review</h4><p>Every paid 10-10 Flash Trivia and 5x5 ChestPlayer match is recorded for fair-play review. Recordings are kept private and removed on schedule.</p><div class="policy-line"><span>All paid games</span><strong>Recorded</strong></div></article><article class="panel policy-card"><span class="policy-number">04</span><h4>Clear payout destination</h4><p>Payouts go only to the wallet you save during setup, so there are no last-minute destination changes.</p><div class="policy-line"><span>Your wallet</span><strong>On file</strong></div></article></div>
+          <section class="panel notice-panel"><div class="notice-icon">?</div><div><strong>Want the full rules?</strong><p>Visit the FAQ for the game formats, entries, scheduled rooms, daily gifts, and payout steps.</p><button class="small-primary" data-view="faq">Read the FAQ <span>→</span></button></div></section>
+        </section>
+
+        <section class="view" id="faqView" aria-labelledby="faqTitle">
+          <div class="view-heading"><div><p class="eyebrow">PLAY GUIDE · RULES AT A GLANCE</p><h3 id="faqTitle">Frequently asked questions</h3><p>Everything you need to know before joining a room, choosing a clue, or requesting a payout.</p></div><span class="secure-badge">READ FIRST</span></div>
+          <div class="faq-callout panel"><span class="faq-callout-icon">?</span><div><strong>Short-answer trivia with a simple clock.</strong><p>Every clue is designed for a one-, two-, or three-word answer. You see the clue, the timer, and your score as you play.</p></div></div>
+          <div class="faq-grid">
+            <article class="panel faq-card"><span class="faq-tag teal-tag">10-10 FLASH</span><h4>How does Flash Trivia work?</h4><p data-i18n="faq.flashSingleAttempt">It is a 1-on-1 match with 10 lower-difficulty random questions. The active player gets one 10-second try. If the answer is wrong or the clock expires, that question is skipped and the correct answer is not displayed.</p></article>
+            <article class="panel faq-card"><span class="faq-tag gold-tag">ACCOUNT</span><h4>How do I sign in or create an account?</h4><p>Select <strong>Sign in / Sign up</strong> and connect MetaMask. MetaMask approves the sign-in, and your private key stays in your wallet.</p></article>
+            <article class="panel faq-card"><span class="faq-tag purple-tag">SCHEDULED MATCHES</span><h4>What is 5x5 ChestPlayer?</h4><p>Scheduled matches have exactly five players, a fixed $100 entry, and a 25-clue Jeopardy-style grid: five categories by five values. At launch, one match is offered every two hours in Central Time.</p></article>
+            <article class="panel faq-card"><span class="faq-tag purple-tag">10 SECONDS</span><h4>What happens on the board?</h4><p>The selector chooses an available tile. The selector gets the first 10-second attempt. A wrong answer or timeout passes the same clue to the next seat, up to all five players. A correct answer earns the tile value and selection rotates.</p></article>
+            <article class="panel faq-card"><span class="faq-tag teal-tag">ANSWERS</span><h4>How are answers matched?</h4><p>Answers are not case-sensitive. Punctuation, hyphens, accents, and repeated spaces are handled for you, and approved synonyms can be accepted.</p></article>
+            <article class="panel faq-card"><span class="faq-tag gold-tag">START GATE</span><h4>What if a scheduled match is not full?</h4><p>The match starts only with all five seats filled at the scheduled time. If fewer than five users sign up by the cutoff, it is cancelled and every reserved entry is refunded exactly once.</p></article>
+            <article class="panel faq-card"><span class="faq-tag gold-tag">TIES</span><h4>How are ties settled?</h4><p>Players tied for the top score share the prize pool equally. A three-way tie receives one-third per player.</p></article>
+            <article class="panel faq-card"><span class="faq-tag teal-tag">MONEY</span><h4>What are the entry and payout rules?</h4><p>Flash entries are $5–$50 USDT; scheduled ChestPlayer entries are $100. Payout requests use your saved cashout code and go only to your saved wallet. Every payout requires a selfie, photo ID showing address, and a quick identity review.</p></article>
+            <article class="panel faq-card"><span class="faq-tag gold-tag">DAILY GIFT</span><h4>Can daily gifts be withdrawn?</h4><p>No. Free-game and free-token rewards are promotional credits. The 5% reward applies only to your next eligible deposit.</p></article>
+            <article class="panel faq-card"><span class="faq-tag purple-tag">FAIR PLAY</span><h4>How do you keep games fair?</h4><p>Questions, timers, turns, scores, and payouts are handled consistently for everyone. Every paid 10-10 and 5x5 game is recorded for private review, and repeated or late actions are not accepted.</p></article>
+          </div>
+        </section>
+
+        <footer class="site-footer"><span>CHESTPLAYER · Think fast. Play fair.</span><span>Questions for curious people · <button class="footer-link" data-view="faq" type="button">Read the FAQ</button> · <a href="termsofuse.html">Terms</a> · <a href="privacypolicy.html">Privacy</a> · <a href="support.html">Support</a></span></footer>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle" hidden>
+      <div class="modal-card auth-modal-card">
+        <button class="modal-close" data-close-auth aria-label="Close sign-in dialog">×</button>
+        <div class="modal-icon teal-icon">◈</div>
+        <p class="eyebrow">WEB3 ACCOUNT</p>
+        <h3 id="authModalTitle">Enter the arena</h3>
+        <p class="modal-copy">Sign in or create your account with MetaMask. Approve the sign-in message in MetaMask; your private key stays in your wallet.</p>
+        <button class="wallet-login-button" id="signInMetaMask" type="button"><span class="wallet-button-mark">◇</span><span><strong>Continue with MetaMask</strong><small>Sign in securely with MetaMask</small></span><span class="wallet-arrow">→</span></button>
+        <div class="auth-wallet-list" id="authWalletList" hidden></div>
+        <div class="auth-state" id="authState"><span class="status-dot"></span><span>Connect a wallet to continue.</span></div>
+        <div class="auth-account" id="authAccount" hidden><div><small>CONNECTED WALLET</small><strong id="authWalletAddress">—</strong></div><button class="small-outline" id="signOutAuth" type="button"><span id="dashboardSignOut">Sign out</span></button></div>
+        <p class="fine-print">Wallet sign-in starts your account. Before saving payout details, you must accept the <a href="termsofuse.html" target="_blank" rel="noopener noreferrer">Terms of Use</a> and acknowledge the <a href="privacypolicy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.</p>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="kycModal" role="dialog" aria-modal="true" aria-labelledby="kycModalTitle" hidden>
+      <div class="modal-card kyc-modal-card">
+        <button class="modal-close" data-close-modal aria-label="Close verification dialog">×</button>
+        <div class="modal-icon purple-icon">⌁</div>
+        <p class="eyebrow">PAYOUT VERIFICATION</p>
+        <h3 id="kycModalTitle">Verify your identity before approval</h3>
+        <p class="modal-copy">Every payout requires a quick identity review. Submit the form, a selfie, and a photo of government ID showing your address. Your documents stay private and are reviewed only by our payout team.</p>
+        <div class="kyc-form-grid"><label class="input-label" for="kycLegalFirstName">Legal first name<input id="kycLegalFirstName" type="text" maxlength="80" autocomplete="given-name" /></label><label class="input-label" for="kycLegalLastName">Legal last name<input id="kycLegalLastName" type="text" maxlength="80" autocomplete="family-name" /></label><label class="input-label" for="kycDateOfBirth">Date of birth<input id="kycDateOfBirth" type="date" autocomplete="bday" /></label><label class="input-label" for="kycCountryCode">Country code<input id="kycCountryCode" type="text" maxlength="2" placeholder="US" autocomplete="country" /></label><label class="input-label kyc-wide" for="kycAddressLine1">Address line 1<input id="kycAddressLine1" type="text" maxlength="160" autocomplete="address-line1" /></label><label class="input-label kyc-wide" for="kycAddressLine2">Address line 2 <span class="optional-label">optional</span><input id="kycAddressLine2" type="text" maxlength="160" autocomplete="address-line2" /></label><label class="input-label" for="kycCity">City<input id="kycCity" type="text" maxlength="100" autocomplete="address-level2" /></label><label class="input-label" for="kycRegion">State / region<input id="kycRegion" type="text" maxlength="100" autocomplete="address-level1" /></label><label class="input-label" for="kycPostalCode">Postal code<input id="kycPostalCode" type="text" maxlength="24" autocomplete="postal-code" /></label><label class="input-label kyc-wide" for="kycSelfie">Selfie<input id="kycSelfie" type="file" accept="image/jpeg,image/png,image/webp" /></label><label class="input-label kyc-wide" for="kycPhotoId">Photo ID showing address<input id="kycPhotoId" type="file" accept="image/jpeg,image/png,image/webp" /></label></div>
+        <label class="kyc-consent"><input id="kycPrivacyConsent" type="checkbox" /> <span>I confirm these details are accurate and consent to private storage and manual review of this KYC evidence.</span></label>
+        <div class="provider-note"><span class="status-dot"></span><span>Ready for review<strong> · both documents required</strong><small>Maximum 8 MB each; accepted formats are JPG, PNG, or WebP.</small></span></div>
+        <button class="primary-button full-width" id="startKyc">Submit KYC for review <span>→</span></button>
+        <button class="text-button full-width center" data-close-modal>Cancel</button>
+      </div>
+    </div>
+
+    <div class="modal-backdrop game-backdrop" id="gameModal" role="dialog" aria-modal="true" aria-labelledby="gameTitle" hidden>
+      <div class="game-card">
+        <div class="game-header"><div><p class="eyebrow" id="gameEyebrow">LIVE MATCH</p><h3 id="gameTitle">10-10 Flash Trivia</h3></div><div class="game-header-actions"><span class="secure-badge">LIVE SCORE</span><button class="modal-close" data-close-game aria-label="Close game">×</button></div></div>
+        <div class="game-warning"><span>⌁</span><span><strong>Play fair.</strong> The clock, turns, scores, and final result are the same for everyone in the room.</span></div>
+        <section class="recording-panel" id="recordingPanel" aria-labelledby="recordingPanelTitle"><div class="recording-panel-head"><div><p class="eyebrow">FAIR-PLAY RECORDING</p><h4 id="recordingPanelTitle">Camera + microphone</h4></div><span class="recording-status" id="recordingStatus">NOT ACTIVE</span></div><p class="recording-copy">Camera and microphone capture are required for every paid 10-10 Flash Trivia and 5x5 ChestPlayer game. Your recording stays private, is used only for fair-play review, and is automatically deleted after 30 days.</p><div class="recording-controls"><button class="small-purple" type="button" id="recordingConsentButton">Allow camera &amp; mic</button><button class="small-outline" type="button" id="recordingStopButton" hidden>Stop capture</button><button class="small-outline" type="button" id="recordingRetryButton" hidden>Retry upload</button><span class="recording-indicator" id="recordingIndicator"><span class="status-dot"></span> Waiting for consent</span></div><video id="recordingPreview" class="recording-preview" autoplay muted playsinline hidden></video></section>
+
+        <section class="game-mode" id="flashGame" aria-label="10-10 Flash Trivia live room">
+          <div class="game-meta"><div><span>QUESTION</span><strong id="flashProgress">01 / 10</strong></div><div><span>TURN</span><strong id="flashTurn">YOUR TRY</strong></div><div class="timer-box"><span>TIME</span><strong id="flashTimer">10.0</strong></div></div>
+          <div class="progress-line"><span id="flashProgressLine"></span></div>
+          <div class="question-card"><div class="question-kicker"><span id="flashCategory">MIXED BAG</span><span id="flashAttemptLabel">FIRST ATTEMPT</span></div><h4 id="flashQuestion">Loading question…</h4><p id="flashHint">Answers ignore case, punctuation, and extra spacing.</p></div>
+          <form class="answer-form" id="flashAnswerForm"><label for="flashChoices">Choose one answer</label><div class="choice-grid" id="flashChoices" role="group" aria-label="Flash answer choices"></div><input id="flashAnswer" type="hidden" /><div class="answer-row"><button class="primary-button" type="submit" id="flashSubmit">Lock answer <span>↗</span></button></div><button class="timeout-button" type="button" id="flashTimeout">Let the clock expire</button></form>
+          <div class="pass-banner" id="flashPassBanner"><span>↷</span><div><strong data-i18n="dashboard.singleAttempt">One attempt per question.</strong><small data-i18n="dashboard.singleAttemptCopy">A wrong answer or timeout skips the question. The correct answer stays hidden.</small></div></div>
+          <div class="score-strip"><div><span>YOU</span><strong id="flashYouScore">0</strong></div><div class="score-divider">VS</div><div><span>OPPONENT</span><strong id="flashOppScore">0</strong></div></div>
+          <div class="game-result" id="flashResult" hidden><div class="result-mark">✦</div><p class="eyebrow">MATCH COMPLETE</p><h4 id="flashResultTitle">Match complete.</h4><p id="flashResultCopy">Your final score is ready.</p><button class="primary-button" data-restart-game="flash">Find another room <span>↻</span></button></div>
+        </section>
+
+        <section class="game-mode" id="boxGame" aria-label="5x5 ChestPlayer live room" hidden>
+          <div class="game-meta box-meta"><div><span>FORMAT</span><strong>5 × 5 BOX</strong></div><div><span>SELECTOR</span><strong id="boxSelector">SEAT 1</strong></div><div class="timer-box"><span>TIME</span><strong id="boxTimer">—</strong></div></div>
+          <div class="box-scoreboard" id="boxScoreboard"></div>
+          <div class="live-box-board" id="liveBoxBoard" aria-label="Playable 5 by 5 board"></div>
+          <div class="box-prompt" id="boxPrompt"><div class="empty-prompt"><span class="prompt-icon">▦</span><strong id="boxPromptTitle">Your selection.</strong><p id="boxPromptCopy">Choose any remaining tile to reveal a clue.</p></div></div>
+          <form class="answer-form box-answer-form" id="boxAnswerForm" hidden><label for="boxAnswer">Your answer</label><div class="answer-row"><input id="boxAnswer" autocomplete="off" maxlength="256" placeholder="Type your answer…" /><button class="small-purple" type="submit" id="boxSubmit">Lock answer <span>↗</span></button></div><button class="timeout-button" type="button" id="boxTimeout">Let the clock expire</button></form>
+          <div class="pass-banner" id="boxPassBanner"><span>↪</span><div><strong>Clue passed to the next seat.</strong><small>Five players can try the same clue before it resolves.</small></div></div>
+          <div class="box-footer-note"><span class="status-dot"></span> Live board · clues appear one at a time.</div>
+        </section>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="auth-config.js"></script>
+    <script src="i18n.js?v=20261021-remote2"></script>
+    <script src="telemetry.js"></script>
+    <script src="app.js?v=20261021-remote1"></script>
+    <script src="error-catalog.js?v=20261022-error-catalog"></script>
+    <script type="module" src="auth.js?v=20261023-auth10"></script>
+  </body>
+</html>

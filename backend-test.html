@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="no-referrer">
+  <title>ChestPlayer backend test console</title>
+  <link rel="stylesheet" href="backend-test.css?v=20261022-1">
+  <script src="auth-config.js?v=20261022-auth8"></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">ChestPlayer · private test console</p>
+        <h1>Backend function checks</h1>
+        <p class="lede">Run one Worker route at a time and inspect the exact response boundary. This page never contains a service key and never saves tokens to browser storage.</p>
+      </div>
+      <div class="top-actions">
+        <span id="authState" class="auth-state"><span class="status-dot"></span><span>Checking session…</span></span>
+        <button id="testSignIn" class="button primary" type="button">Sign in with MetaMask</button>
+        <button id="testSignOut" class="button ghost" type="button">Sign out</button>
+      </div>
+    </header>
+
+    <section class="notice warning">
+      <strong>Use this only for controlled testing.</strong>
+      <span>Read requests are safe. Money, account, KYC, game, recording, and admin writes are gated by the mutation switch below. Do not paste a service key, seed phrase, cashout code, KYC image, or signed URL into this page.</span>
+    </section>
+
+    <section class="panel setup-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">1 · connection</p>
+          <h2>Gateway and session</h2>
+        </div>
+        <button id="resetOrigins" class="button ghost small" type="button">Reset origins</button>
+      </div>
+      <div class="origin-grid">
+        <label>Edge gateway<input data-origin="edge" value="https://edge.chestplayer.us" inputmode="url" autocomplete="off"></label>
+        <label>Athina auth alias<input data-origin="auth" value="https://athina.chestplayer.us" inputmode="url" autocomplete="off"></label>
+        <label>Apollo API alias<input data-origin="api" value="https://apollo.chestplayer.us" inputmode="url" autocomplete="off"></label>
+        <label>Olympia game alias<input data-origin="game" value="https://olympia.chestplayer.us" inputmode="url" autocomplete="off"></label>
+        <label>Afentiko recording alias<input data-origin="anticheat" value="https://afentiko.chestplayer.us" inputmode="url" autocomplete="off"></label>
+        <label>Attica admin alias<input data-origin="admin" value="https://attica.chestplayer.us" inputmode="url" autocomplete="off"></label>
+      </div>
+      <div class="session-row">
+        <label class="grow">Optional manual bearer token<input id="manualToken" type="password" placeholder="Only for a short-lived test session; never log or save it" autocomplete="off" spellcheck="false"></label>
+        <label class="checkbox"><input id="useManualToken" type="checkbox"> Use manual token</label>
+        <button id="clearManualToken" class="button ghost small" type="button">Clear token</button>
+      </div>
+      <div class="session-row compact">
+        <label>Locale<select id="globalLocale"><option value="en">en</option><option value="es">es</option><option value="fr">fr</option><option value="it">it</option><option value="el">el</option><option value="de">de</option><option value="cs">cs</option><option value="pl">pl</option><option value="tr">tr</option><option value="ru">ru</option></select></label>
+        <label>Match ID<input id="matchId" value="00000000-0000-4000-8000-000000000000" spellcheck="false" autocomplete="off"></label>
+        <label>Question ID<input id="questionId" value="00000000-0000-4000-8000-000000000000" spellcheck="false" autocomplete="off"></label>
+        <label>Flash request ID<input id="flashRequestId" value="00000000-0000-4000-8000-000000000000" spellcheck="false" autocomplete="off"></label>
+        <label>Flash offer ID<input id="flashOfferId" value="00000000-0000-4000-8000-000000000000" spellcheck="false" autocomplete="off"></label>
+      </div>
+      <div class="session-row compact">
+        <label>Recording ID<input id="recordingId" value="00000000-0000-4000-8000-000000000000" spellcheck="false" autocomplete="off"></label>
+        <label>Withdrawal ID<input id="withdrawalId" value="00000000-0000-4000-8000-000000000000" spellcheck="false" autocomplete="off"></label>
+        <label>KYC submission ID<input id="kycSubmissionId" value="00000000-0000-4000-8000-000000000000" spellcheck="false" autocomplete="off"></label>
+        <label>KYC document ID<input id="kycDocumentId" value="00000000-0000-4000-8000-000000000000" spellcheck="false" autocomplete="off"></label>
+      </div>
+      <div class="session-footer">
+        <label class="checkbox"><input id="attachToken" type="checkbox" checked> Attach available bearer session</label>
+        <label class="checkbox danger-toggle"><input id="allowMutations" type="checkbox"> Enable write/destructive probes</label>
+        <span id="requestStatus" class="muted">No test request has been sent.</span>
+      </div>
+    </section>
+
+    <section class="panel instructions">
+      <details>
+        <summary>How to read a failure</summary>
+        <div class="instruction-grid">
+          <p><strong>Browser fetch failure</strong><br>There is no HTTP response. The page will show the exact browser exception and label the point as <code>browser.fetch</code>; check DevTools Network, DNS/TLS, and the edge CORS allowlist.</p>
+          <p><strong>Edge failure</strong><br>The edge response includes <code>x-request-id</code>, <code>x-error-*</code>, and a diagnostic object. The page shows the gateway stage and the exact edge code.</p>
+          <p><strong>Worker or Supabase failure</strong><br>The response diagnostic preserves the source code and stage such as <code>supabase.rpc...</code>. Use the request ID in Cloudflare and Supabase logs.</p>
+          <p><strong>Expected validation failure</strong><br>Placeholder IDs and bodies intentionally produce a precise 4xx contract response. That confirms the route is reachable; it is not a page defect.</p>
+        </div>
+      </details>
+    </section>
+
+    <div id="endpointSections"></div>
+
+    <section class="panel log-panel">
+      <div class="panel-heading log-heading">
+        <div>
+          <p class="eyebrow">live response log</p>
+          <h2>Every response</h2>
+        </div>
+        <div class="log-actions">
+          <span id="logCount" class="count">0 entries</span>
+          <button id="copyLatest" class="button ghost small" type="button">Copy latest</button>
+          <button id="exportLog" class="button ghost small" type="button">Export JSON</button>
+          <button id="clearLog" class="button ghost small" type="button">Clear log</button>
+        </div>
+      </div>
+      <div id="responseLog" class="response-log" aria-live="polite">
+        <div class="empty-log">Run a button above. Responses stay in memory until you clear or leave this page.</div>
+      </div>
+    </section>
+
+    <section class="notice">
+      <strong>Scheduled-only jobs:</strong>
+      <span>Attica's cron handler also runs abandoned-match cleanup, stale-session cleanup, next scheduled-match creation, notification delivery, recording retention, and KYC retention. They intentionally have no arbitrary browser trigger; use the Cloudflare scheduled-event test or the protected reconciliation button above.</span>
+    </section>
+
+    <footer class="footer-note">Private diagnostic page · no service secrets · no automatic retries · no automatic writes</footer>
+  </main>
+    <script src="error-catalog.js?v=20261022-error-catalog"></script>
+
+  <script src="auth.js?v=20261022-auth9"></script>
+  <script src="backend-test.js?v=20261022-1"></script>
+</body>
+</html>

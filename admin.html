@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en" data-i18n-title="meta.title.admin">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#070b16" />
+    <meta name="description" content="ChestPlayer private payout operations console." />
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; connect-src 'self' https://edge.chestplayer.us; media-src 'self' https://phdtotuosmykxxjruxbf.supabase.co blob:; img-src 'self' data: https://phdtotuosmykxxjruxbf.supabase.co; script-src 'self' https://cdn.jsdelivr.net; style-src 'self'; frame-ancestors 'none'; form-action 'self'; object-src 'none'" />
+    <title>ChestPlayer Ops · Payout review</title>
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+  <body>
+    <div class="ops-shell">
+      <header class="ops-header">
+        <div class="brand-lockup">
+          <a class="brand-mark" href="./" aria-label="Back to ChestPlayer home"><span></span><span></span><span></span><b>ϟ</b></a>
+          <div>
+            <p class="eyebrow">CHESTPLAYER OPERATIONS</p>
+            <h1>Payout review</h1>
+          </div>
+        </div>
+        <div class="header-actions">
+          <span class="secure-chip"><span class="status-dot"></span> Private operator console</span>
+          <label class="ops-locale"><span data-i18n="language">Language</span><select id="localeSelect" aria-label="Language"><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="it">Italiano</option><option value="el">Ελληνικά</option><option value="de">Deutsch</option><option value="cs">Čeština</option><option value="pl">Polski</option><option value="tr">Türkçe</option><option value="ru">Русский</option></select></label>
+          <a class="back-link" href="./">← Player site</a>
+        </div>
+      </header>
+
+      <section class="auth-panel panel" aria-labelledby="authTitle">
+        <div>
+          <p class="eyebrow">AUTHORIZED ACCESS</p>
+          <h2 id="authTitle">Sign in with an operator wallet</h2>
+          <p class="muted">Only a Supabase user with <code>arena_role</code> set to <code>ops</code> or <code>admin</code> can load payouts or private recordings.</p>
+        </div>
+        <div class="auth-actions">
+          <button class="button primary" id="signInMetaMask" type="button"><strong>Continue with MetaMask</strong><span>◇</span></button>
+          <div class="auth-state" id="authState"><span class="status-dot"></span><span>Connect an authorized wallet to continue.</span></div>
+          <div class="auth-account" id="authAccount" hidden>
+            <span><small>CONNECTED WALLET</small><strong id="authWalletAddress">—</strong></span>
+            <button class="button quiet" id="signOutAuth" type="button">Sign out</button>
+          </div>
+        </div>
+      </section>
+
+      <main>
+        <section class="ops-toolbar panel" aria-label="Payout queue controls">
+          <div>
+            <p class="eyebrow">MANUAL SETTLEMENT</p>
+            <h2>Review wins before funds move</h2>
+            <p class="muted">Each decision requires a typed operator signature and a written justification. Video deletion is available only after the payout is paid, denied, or cancelled.</p>
+          </div>
+          <div class="toolbar-controls">
+            <label for="queueStatus">Queue view<select id="queueStatus"><option value="pending" data-i18n="admin.needsReview">Needs review</option><option value="approved" data-i18n="admin.status.approved">Approved</option><option value="paid" data-i18n="admin.status.paid">Paid</option><option value="rejected" data-i18n="admin.denied">Denied</option><option value="all" data-i18n="admin.allRequests">All requests</option></select></label>
+            <button class="button quiet" id="refreshQueue" type="button">Refresh queue</button>
+          </div>
+        </section>
+
+        <div class="ops-message" id="queueMessage" role="status" aria-live="polite">Sign in to load the private payout queue.</div>
+
+        <section class="stats-grid" aria-label="Queue summary">
+          <article class="stat-card"><span>VISIBLE REQUESTS</span><strong id="statVisible">—</strong><small>current queue filter</small></article>
+          <article class="stat-card purple"><span>NEEDS REVIEW</span><strong id="statPending">—</strong><small>pending or KYC-pending</small></article>
+          <article class="stat-card green"><span>RECORDINGS</span><strong id="statRecordings">—</strong><small>linked private videos</small></article>
+          <article class="stat-card gold"><span>HIGH VALUE</span><strong id="statKyc">—</strong><small>KYC-required requests</small></article>
+        </section>
+
+        <section class="kyc-review-layout" aria-labelledby="kycQueueTitle">
+          <aside class="queue-panel panel" aria-labelledby="kycQueueTitle">
+            <div class="section-head"><div><p class="eyebrow">IDENTITY REVIEW</p><h2 id="kycQueueTitle">KYC submissions</h2></div><div class="toolbar-controls"><label for="kycStatus">View<select id="kycStatus"><option value="submitted" data-i18n="admin.submitted">Submitted</option><option value="under_review" data-i18n="admin.status.under_review">Under review</option><option value="needs_info" data-i18n="admin.status.needs_info">Needs info</option><option value="verified" data-i18n="admin.status.verified">Verified</option><option value="rejected" data-i18n="admin.status.rejected">Rejected</option><option value="all" data-i18n="admin.all">All</option></select></label><button class="button quiet" id="refreshKyc" type="button" data-i18n="admin.refresh">Refresh</button></div></div>
+            <div class="queue-list" id="kycQueue"><div class="empty-state"><strong>Operator authentication required.</strong><span>Private KYC records appear only after wallet authorization.</span></div></div>
+          </aside>
+
+          <article class="kyc-detail-panel panel" id="kycDetail" hidden aria-labelledby="kycDetailTitle">
+            <div class="section-head"><div><p class="eyebrow">SELECTED SUBMISSION</p><h2 id="kycDetailTitle">KYC detail</h2></div><span class="status-pill" id="kycDetailStatus">—</span></div>
+            <div class="detail-grid">
+              <div><span>LEGAL NAME</span><strong id="kycDetailName">—</strong></div>
+              <div><span>DATE OF BIRTH</span><strong id="kycDetailDob">—</strong></div>
+              <div><span>COUNTRY</span><strong id="kycDetailCountry">—</strong></div>
+              <div class="wide"><span>ADDRESS</span><strong id="kycDetailAddress">—</strong></div>
+              <div><span>SUBMITTED</span><strong id="kycDetailSubmitted">—</strong></div>
+              <div><span>SUBMISSION ID</span><code id="kycDetailId">—</code></div>
+            </div>
+            <section class="kyc-doc-grid" aria-label="Private KYC documents">
+              <article class="kyc-doc-card"><div class="section-head compact"><div><p class="eyebrow">SELFIE</p><h3>Identity photo</h3></div><button class="button quiet" id="loadKycSelfie" type="button">Load</button></div><div class="kyc-image-frame" id="kycSelfieState"><span>Private image not loaded</span></div><img id="kycSelfieImage" alt="Private KYC selfie" hidden /></article>
+              <article class="kyc-doc-card"><div class="section-head compact"><div><p class="eyebrow">PHOTO ID</p><h3>ID showing address</h3></div><button class="button quiet" id="loadKycPhotoId" type="button">Load</button></div><div class="kyc-image-frame" id="kycPhotoIdState"><span>Private image not loaded</span></div><img id="kycPhotoIdImage" alt="Private photo ID showing address" hidden /></article>
+            </section>
+            <section class="decision-form" aria-labelledby="kycDecisionTitle">
+              <div class="section-head compact"><div><p class="eyebrow">SIGNED DECISION</p><h3 id="kycDecisionTitle">KYC operator attestation</h3></div><span class="secure-chip">AUDITED</span></div>
+              <label for="kycSignature">Typed e-signature<input id="kycSignature" type="text" maxlength="160" autocomplete="off" placeholder="Your full operator name" /></label>
+              <label for="kycJustification">Justification<textarea id="kycJustification" maxlength="2000" rows="4" placeholder="State which evidence was reviewed and why the decision is appropriate."></textarea></label>
+              <div class="decision-actions"><button class="button approve" id="verifyKyc" type="button">Verify KYC</button><button class="button hold" id="needsInfoKyc" type="button">Request more info</button><button class="button deny" id="rejectKyc" type="button">Reject KYC</button></div>
+              <p class="form-note" id="kycDetailMessage" role="status" aria-live="polite">Select a submission to begin.</p>
+            </section>
+          </article>
+        </section>
+
+        <section class="review-layout">
+          <aside class="queue-panel panel" aria-labelledby="queueTitle">
+            <div class="section-head"><div><p class="eyebrow">PAYOUT QUEUE</p><h2 id="queueTitle">Requests</h2></div><span class="secure-chip">NO SAMPLE DATA</span></div>
+            <div class="queue-list" id="payoutQueue"><div class="empty-state"><strong>Operator authentication required.</strong><span>The Worker will return only authorized queue rows.</span></div></div>
+          </aside>
+
+          <article class="detail-panel panel" id="payoutDetail" hidden aria-labelledby="detailTitle">
+            <div class="section-head"><div><p class="eyebrow">SELECTED REQUEST</p><h2 id="detailTitle">Payout detail</h2></div><span class="status-pill" id="detailStatus">—</span></div>
+
+            <div class="detail-grid">
+              <div><span>PLAYER</span><strong id="detailPlayer">—</strong></div>
+              <div><span>REQUESTED</span><strong id="detailAmount">—</strong></div>
+              <div><span>REVIEW TIER</span><strong id="detailTier">—</strong></div>
+              <div><span>KYC</span><strong id="detailKyc">—</strong></div>
+              <div class="wide"><span>IMMUTABLE PAYOUT WALLET</span><code id="detailWallet">—</code></div>
+              <div><span>MATCH</span><strong id="detailMatch">—</strong></div>
+              <div><span>RECORDING</span><strong id="detailRecording">—</strong></div>
+              <div><span>REQUESTED AT</span><strong id="detailCreated">—</strong></div>
+            </div>
+
+            <section class="video-review" aria-labelledby="videoTitle">
+              <div class="section-head compact"><div><p class="eyebrow">PRIVATE EVIDENCE</p><h3 id="videoTitle">Scheduled-match recording</h3></div><button class="button quiet" id="loadVideo" type="button">Load video</button></div>
+              <div class="video-frame" id="videoState"><span class="video-icon">▶</span><strong>Video not loaded</strong><small>A short-lived signed URL is created only after this operator requests playback.</small></div>
+              <video id="reviewVideo" controls playsinline preload="metadata" hidden></video>
+              <div class="video-meta" id="videoMeta">No recording linked to this payout.</div>
+            </section>
+
+            <section class="decision-form" aria-labelledby="decisionTitle">
+              <div class="section-head compact"><div><p class="eyebrow">SIGNED DECISION</p><h3 id="decisionTitle">Operator attestation</h3></div><span class="secure-chip">AUDITED</span></div>
+              <label for="operatorSignature">Typed e-signature<input id="operatorSignature" type="text" maxlength="160" autocomplete="off" placeholder="Your full operator name" /></label>
+              <label for="reviewJustification">Justification<textarea id="reviewJustification" maxlength="2000" rows="4" placeholder="Describe the evidence reviewed and why this action is appropriate."></textarea></label>
+              <label for="txHash">Payout transaction hash <span class="optional">required only to issue payout</span><input id="txHash" type="text" maxlength="200" autocomplete="off" placeholder="0x…" /></label>
+              <div class="decision-actions">
+                <button class="button approve" id="approveWin" type="button">Approve win</button>
+                <button class="button deny" id="denyWin" type="button">Deny win</button>
+                <button class="button hold" id="holdPayout" type="button">Place on hold</button>
+                <button class="button issue" id="issuePayout" type="button">Issue payout</button>
+                <button class="button delete" id="deleteVideo" type="button">Delete video</button>
+              </div>
+              <p class="form-note" id="detailMessage" role="status" aria-live="polite">Select a request to begin.</p>
+            </section>
+          </article>
+
+          <article class="detail-empty panel" id="detailEmpty">
+            <div class="empty-illustration">ϟ</div>
+            <p class="eyebrow">REVIEW WORKSPACE</p>
+            <h2>Select a payout request</h2>
+            <p class="muted">The selected request will show the immutable wallet snapshot, KYC tier, scheduled-match link, and private recording controls.</p>
+          </article>
+        </section>
+      </main>
+
+      <footer class="ops-footer"><span>CHESTPLAYER · operator actions are append-only in the audit stream</span><span>Recordings follow the configured retention policy.</span></footer>
+    </div>
+
+    <script src="auth-config.js"></script>
+    <script src="i18n.js"></script>
+    <script src="admin-config.js"></script>
+    <script src="admin.js"></script>
+    <script src="error-catalog.js?v=20261022-error-catalog"></script>
+    <script src="auth.js?v=20261023-auth10"></script>
+    <script src="telemetry.js"></script>
+  </body>
+</html>

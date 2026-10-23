@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en" data-i18n-title="meta.title.faq">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="ChestPlayer game FAQ" />
+    <title>ChestPlayer · FAQ</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="site-pages.css" />
+  </head>
+  <body class="site-page">
+    <div class="site-page-shell">
+      <header class="site-header"><a class="site-brand" href="index.html"><span class="site-brand-mark">ϟ</span><span>CHESTPLAYER</span></a><nav class="site-nav" aria-label="Site navigation"><a href="dashboard.html" data-i18n="site.play">Play</a><a href="support.html" data-i18n="site.support">Support</a><select class="site-locale" id="localeSelect" aria-label="Language"><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="it">Italiano</option><option value="el">Ελληνικά</option><option value="de">Deutsch</option><option value="cs">Čeština</option><option value="pl">Polski</option><option value="tr">Türkçe</option><option value="ru">Русский</option></select></nav></header>
+      <main class="site-main">
+        <div class="site-page-heading"><div class="site-kicker" data-i18n="faq.eyebrow">PLAY GUIDE · RULES AT A GLANCE</div><h1 class="site-page-title" data-i18n="faq.title">Frequently asked questions</h1><p class="site-page-intro" data-i18n="faq.copy">Everything you need to know before joining a room, choosing a clue, or requesting a payout.</p></div>
+        <section class="site-card"><div class="site-kicker" data-i18n="faq.short">Short-answer trivia, server-timed.</div><p data-i18n="faq.shortCopy">Every clue is designed for a one-, two-, or three-word answer. The browser shows the clue and clock; the Worker and database decide validity, timing, score, and settlement.</p></section>
+        <section class="site-faq-grid">
+          <article class="site-card"><div class="site-kicker" data-i18n="faq.tagFlash">10-10 FLASH</div><h2 data-i18n="faq.flashTitle">How does Flash Trivia work?</h2><p data-i18n="faq.flashCopy">It is a 1-on-1 match with 10 lower-difficulty random questions. The first player gets a 10-second try. If that player is wrong or times out, the same question passes to the opponent for their 10-second try.</p></article>
+          <article class="site-card"><div class="site-kicker" data-i18n="faq.tagScheduled">SCHEDULED MATCHES</div><h2 data-i18n="faq.boxTitle">What is 5x5 ChestPlayer?</h2><p data-i18n="faq.boxCopy">Scheduled matches have exactly five players, a fixed $100 entry, and a 25-clue Jeopardy-style grid: five categories by five values. At launch, one match is offered every two hours in Central Time.</p></article>
+          <article class="site-card"><div class="site-kicker" data-i18n="faq.tagAnswers">ANSWERS</div><h2 data-i18n="faq.answersTitle">How are answers matched?</h2><p data-i18n="faq.answersCopy">Answers are not case-sensitive. Punctuation, hyphens, accents, and repeated spaces are normalized, and approved synonyms can be accepted. The question bank rejects canonical answers and aliases longer than three normalized words.</p></article>
+          <article class="site-card"><div class="site-kicker" data-i18n="faq.tagStart">START GATE</div><h2 data-i18n="faq.startTitle">What if a scheduled match is not full?</h2><p data-i18n="faq.startCopy">The match starts only with all five seats filled at the scheduled time. If fewer than five users sign up by the cutoff, it is cancelled and every reserved entry is refunded exactly once.</p></article>
+          <article class="site-card"><div class="site-kicker" data-i18n="faq.tagTies">TIES</div><h2 data-i18n="faq.tiesTitle">How are ties settled?</h2><p data-i18n="faq.tiesCopy">All players tied for the top score share the paid prize pool equally. A three-way tie receives one-third per player. Any indivisible base-unit rounding dust is recorded transparently and never assigned to one tied seat.</p></article>
+          <article class="site-card"><div class="site-kicker" data-i18n="faq.tagMoney">MONEY</div><h2 data-i18n="faq.moneyTitle">What are the entry and payout rules?</h2><p data-i18n="faq.moneyCopy">Flash entries are $5–$50 USDT; scheduled ChestPlayer entries are $100. Payout requests use the saved cashout code and can only go to the immutable linked wallet. Every withdrawal requires verified manual KYC before approval.</p></article>
+          <article class="site-card"><div class="site-kicker" data-i18n="faq.tagGift">DAILY GIFT</div><h2 data-i18n="faq.giftTitle">Can daily gifts be withdrawn?</h2><p data-i18n="faq.giftCopy">No. Free-game and free-token outcomes are recorded as non-withdrawable promotional credits. They do not change cash balance or enter paid matches until a separately reviewed promotional-entry ledger is enabled; the 5% outcome applies only to the next eligible deposit.</p></article>
+          <article class="site-card"><div class="site-kicker" data-i18n="faq.tagFair">FAIR PLAY</div><h2 data-i18n="faq.integrityTitle">How is play protected?</h2><p data-i18n="faq.integrityCopy">Answer keys, clocks, turn order, question selection, scoring, wallet reservations, settlement, and recording status remain server-side. Every paid 10-10 and 5x5 game is recorded for private review. Nonces, locked rows, idempotency keys, rate limits, and audit events reject stale or replayed actions.</p></article>
+          <article class="site-card"><div class="site-kicker" data-i18n="faq.tagSignIn">SIGN-IN</div><h2 data-i18n="faq.authQuestion">How do I sign in or create an account?</h2><p><span data-i18n="faq.authLead">Select</span> <a class="site-link" href="index.html" data-i18n="auth.signInSignUp">Sign in / Sign up</a> <span data-i18n="faq.authTailMetaMask">and connect MetaMask. Supabase verifies the wallet signature; a new MetaMask wallet automatically creates its account. No private key is ever sent to the site.</span></p></article>
+        </section>
+      </main>
+      <footer class="site-footer"><span>ChestPlayer · Think fast. Play fair.</span><span><a href="termsofuse.html">Terms</a> · <a href="privacypolicy.html">Privacy</a> · <a href="support.html">Support</a></span></footer>
+    </div>
+    <script src="auth-config.js"></script><script src="i18n.js"></script>
+  </body>
+</html>

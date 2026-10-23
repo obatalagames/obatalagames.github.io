@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#070b16" />
+    <meta name="description" content="ChestPlayer — fast trivia, friendly competition, and scheduled five-player matches." />
+    <title>ChestPlayer — Think fast. Play fair.</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="site-pages.css" />
+  </head>
+  <body class="site-page">
+    <div class="site-page-shell">
+      <header class="site-header">
+        <a class="site-brand" href="index.html" aria-label="ChestPlayer home"><span class="site-brand-mark">ϟ</span><span>CHESTPLAYER</span></a>
+        <nav class="site-nav" aria-label="Site navigation">
+          <a href="faq.html" data-i18n="nav.faq">FAQ</a>
+          <a href="support.html">Support</a>
+          <a href="admin.html">Operators</a>
+          <select class="site-locale" id="localeSelect" aria-label="Language"><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="it">Italiano</option><option value="el">Ελληνικά</option><option value="de">Deutsch</option><option value="cs">Čeština</option><option value="pl">Polski</option><option value="tr">Türkçe</option><option value="ru">Русский</option></select>
+        </nav>
+      </header>
+
+      <main class="site-main">
+        <section class="site-hero">
+          <div>
+            <div class="site-kicker">CHESTPLAYER · FAST TRIVIA · FAIR PLAY</div>
+            <h1>Think fast.<br /><em>Play fair.</em></h1>
+            <p>Quick 1-on-1 trivia and scheduled five-player boards. Simple rules, ten-second turns, and payouts sent only to your linked wallet.</p>
+            <div class="site-actions">
+              <button class="site-button" id="authTrigger" type="button">Sign in / Sign up</button>
+              <a class="site-button secondary" href="faq.html" data-i18n="format.how">How it works ↗</a>
+            </div>
+            <div class="site-status" id="routeStatus" role="status" aria-live="polite">Connect your wallet to sign in or create an account.</div>
+          </div>
+          <div class="site-visual" aria-hidden="true"><div class="site-orbit"><div><strong>10s</strong><span>one question at a time</span></div></div></div>
+        </section>
+
+        <section class="site-cards" aria-label="Game formats">
+          <article class="site-card"><div class="site-kicker">1 · QUICK DUEL</div><h2>10-10 Flash Trivia</h2><p>Ten easy-to-medium multiple-choice questions. Miss or time out and the same question goes to your opponent.</p><a class="site-link" data-requires-auth="true" href="dashboard.html?view=flash">Find a match →</a></article>
+          <article class="site-card"><div class="site-kicker">2 · SCHEDULED MATCH</div><h2>5x5 ChestPlayer</h2><p>Five players, a fixed $100 USDT entry, and a 25-clue write-in board. Rooms run every two hours when full.</p><a class="site-link" data-requires-auth="true" href="dashboard.html?view=box">See scheduled matches →</a></article>
+          <article class="site-card"><div class="site-kicker">3 · READY WHEN YOU ARE</div><h2>One wallet, one destination</h2><p>Your wallet signs in, your account is created automatically, and payouts go only to the wallet saved during setup.</p><a class="site-link" href="support.html">Get help →</a></article>
+        </section>
+      </main>
+
+      <footer class="site-footer"><span>CHESTPLAYER · Think fast. Play fair.</span><span><a href="termsofuse.html">Terms</a> · <a href="privacypolicy.html">Privacy</a> · <a href="support.html">Support</a></span></footer>
+    </div>
+
+    <div class="site-modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle" hidden>
+      <div class="modal-card auth-modal-card">
+        <button class="modal-close" data-close-auth aria-label="Close sign-in dialog">×</button>
+        <div class="site-kicker">WALLET SIGN-IN</div>
+        <h2 id="authModalTitle">Enter the arena</h2>
+        <p>Connect a wallet you control. You will approve a short sign-in message; your private key never leaves your wallet.</p>
+        <button class="wallet-login-button" id="signInMetaMask" type="button"><span class="wallet-button-mark">◇</span><span><strong>Continue with MetaMask</strong><small>Sign in securely with MetaMask</small></span><span class="wallet-arrow">→</span></button>
+        <div id="authWalletList" hidden></div>
+        <div class="auth-state" id="authState"><span class="status-dot"></span><span>Connect a wallet to continue.</span></div>
+        <div class="auth-account" id="authAccount" hidden><div><small>CONNECTED WALLET</small><strong id="authWalletAddress">—</strong></div><button class="site-link-button" id="signOutAuth" type="button">Sign out</button></div>
+        <p class="fine-print">New players review the Terms of Use and Privacy Policy before their account is created.</p>
+      </div>
+    </div>
+
+    <script src="auth-config.js"></script>
+    <script src="i18n.js"></script>
+    <script src="site-router.js"></script>
+    <script type="module" src="auth.js?v=20261021-auth7"></script>
+  </body>
+</html>
