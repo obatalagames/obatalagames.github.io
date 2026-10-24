@@ -25,6 +25,15 @@
     if (status) status.textContent = message;
   }
 
+  function setAuthModal(open) {
+    const modal = document.querySelector("#authModal");
+    if (!modal) return;
+    modal.hidden = !open;
+    modal.setAttribute("aria-hidden", open ? "false" : "true");
+    document.body.classList.toggle("auth-dialog-open", open);
+    if (open) window.requestAnimationFrame?.(() => document.querySelector("#signInMetaMask")?.focus());
+  }
+
   function sessionKey(session) {
     return String(session?.user?.id || session?.access_token || "authenticated");
   }
@@ -88,9 +97,9 @@
   }
 
   function bind() {
-    document.querySelector("#authTrigger")?.addEventListener("click", () => { document.querySelector("#authModal").hidden = false; });
-    document.querySelector("[data-close-auth]")?.addEventListener("click", () => { document.querySelector("#authModal").hidden = true; });
-    document.querySelector("#authModal")?.addEventListener("click", (event) => { if (event.target.id === "authModal") event.currentTarget.hidden = true; });
+    document.querySelector("#authTrigger")?.addEventListener("click", () => setAuthModal(true));
+    document.querySelector("[data-close-auth]")?.addEventListener("click", () => setAuthModal(false));
+    document.querySelector("#authModal")?.addEventListener("click", (event) => { if (event.target.id === "authModal") setAuthModal(false); });
     document.querySelectorAll("[data-requires-auth]").forEach((node) => node.addEventListener("click", async (event) => {
       event.preventDefault();
       const target = node.getAttribute("href") || "dashboard.html";
@@ -98,7 +107,7 @@
       try { accessToken = await auth()?.getAccessToken?.(); } catch (_) { accessToken = null; }
       if (accessToken) return window.location.assign(target);
       const modal = document.querySelector("#authModal");
-      if (modal) modal.hidden = false;
+      if (modal) setAuthModal(true);
     }));
     window.addEventListener("trivia-auth-change", (event) => {
       const session = event.detail?.session || null;
