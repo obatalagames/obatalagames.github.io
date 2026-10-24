@@ -1,740 +1,601 @@
-(() => {
-  "use strict";
+const config = window.TRIVIA_ARENA_CONFIG || {};
+const AUTH_WORKER_ERROR = "AUTH_WORKER_UNAVAILABLE";
+const $ = (selector) => document.querySelector(selector);
+let clientPromise;
+let providers = [];
+let currentSession = null;
+let signInInFlight = false;
+let sessionMonitor = null;
+let lastActivityAt = 0;
+const walletListeners = new WeakSet();
+const AUTH_SESSION_MARKER = "chestplayer.auth.session.v1";
+const AUTH_SESSION_ID = "chestplayer.auth.session_id";
+const AUTH_SESSION_STARTED = "chestplayer.auth.started_at";
+const AUTH_SESSION_ACTIVITY = "chestplayer.auth.last_activity_at";
+const AUTH_SESSION_MAX_AGE_MS = 4 * 60 * 60 * 1000;
+const AUTH_IDLE_TIMEOUT_MS = 45 * 60 * 1000;
 
-  const config = window.CHESTPLAYER_AUTH_CONFIG || window.TRIVIA_ARENA_CONFIG || {};
-  const SESSION_MARKER = "chestplayer.auth.v2.marker";
-  const SESSION_ID = "chestplayer.auth.v2.session_id";
-  const SESSION_STARTED = "chestplayer.auth.v2.started_at";
-  const SESSION_ACTIVITY = "chestplayer.auth.v2.last_activity_at";
-  const AUTH_SESSION_MAX_AGE_MS = 4 * 60 * 60 * 1000;
-  const AUTH_IDLE_TIMEOUT_MS = 45 * 60 * 1000;
+function tr(key, fallback) {
+  return window.TriviaI18n?.t?.(key) || fallback || key;
+}
 
-  let clientPromise = null;
-  let currentSession = null;
-  let sessionMonitor = null;
-  let signInInFlight = false;
-  let authSubscriptionAttached = false;
-  let lastActivityAt = 0;
-  const announcedProviders = [];
-  const listenedProviders = new WeakSet();
-
-  function safe(value, limit = 240) {
-    return String(value ?? "")
-      .replace(/[\u0000-\u001f\u007f]+/g, " ")
-      .replace(/[\r\n]+/g, " ")
-      .trim()
-      .slice(0, limit);
+function readableError(error, fallback) {
+  const message = String(error?.message || error || "");
+  const errorCode = String(error?.code ?? "");
+  const normalized = message.toLowerCase();
+  if (errorCode === "4001" || /user rejected|user denied|request rejected|cancelled|canceled/.test(normalized)) {
+    return tr("auth.signInCancelled", fallback || "Wallet sign-in was cancelled.");
   }
-
-  function makeError(code, message, details = {}) {
-    const error = new Error(message || code);
-    error.code = code;
-    Object.assign(error, details);
-    return error;
+  if (errorCode === "-32002" || /already pending|request already open/.test(normalized)) {
+    return tr("auth.signInPending", fallback || "A wallet sign-in request is already open. Finish it in your wallet first.");
   }
-
-  function isConfigured() {
-    const url = safe(config.supabaseUrl, 300);
-    const authOrigin = safe(config.authOrigin, 300);
-    const key = safe(config.supabasePublishableKey, 300);
-    const sdkUrl = safe(config.supabaseSdkUrl, 300);
-    const statement = safe(config.walletStatement, 300);
-    return /^https:\/\//i.test(url)
-      && /^https:\/\//i.test(authOrigin)
-      && key.length > 20
-      && !/replace|your_|YOUR_|PUBLISHABLE_OR_ANON/i.test(key)
-      && /^https:\/\//i.test(sdkUrl)
-      && statement.length >= 8
-      && !/replace|your_|YOUR_/i.test(statement);
+  if (/eth_requestaccounts is missing or invalid|no compatible ethereum wallet|wallet_no_account/.test(normalized)) {
+    return tr("auth.walletRequestFailed", fallback || "MetaMask did not respond. Unlock it, close any pending request, and try again.");
   }
+  const keys = {
+    METAMASK_AUTH_UNAVAILABLE: "error.metaMaskUnavailable",
+    SUPABASE_SDK_INVALID: "error.sdk",
+  };
+  return keys[message] ? tr(keys[message], fallback) : (message || fallback);
+}
 
-  function workerOrigin() {
-    const origin = safe(config.authOrigin, 300).replace(/\/+$/, "");
-    return /^https:\/\//i.test(origin) && !/replace|your_|YOUR_/i.test(origin) ? origin : "";
+function configured() {
+  const url = String(config.supabaseUrl || "").trim();
+  const key = String(config.supabasePublishableKey || "").trim();
+  const sdkUrl = String(config.supabaseSdkUrl || "").trim();
+  const statement = String(config.walletStatement || "").trim();
+  return /^https:\/\//i.test(url)
+    && !/your_project|your-domain|replace-with|YOUR_SUPABASE|YOUR_PROJECT/i.test(url)
+    && key.length > 20
+    && !/YOUR_SUPABASE|PUBLISHABLE_OR_ANON|replace-with/i.test(key)
+    && /^https:\/\//i.test(sdkUrl)
+    && statement.length >= 20
+    && !/your-domain\.example|replace-with-your-domain|YOUR_PROJECT|YOUR_SUPABASE/i.test(statement);
+}
+
+function authWorkerOrigin() {
+  const value = String(config.authOrigin || "").trim().replace(/\/+$/, "");
+  if (!/^https:\/\//i.test(value) || /your-domain|replace-with|YOUR_/i.test(value)) return "";
+  return value;
+}
+
+function apiOrigin() {
+  const value = String(config.apiOrigin || "").trim().replace(/\/+$/, "");
+  if (!/^https:\/\//i.test(value) || /your-domain|replace-with|YOUR_/i.test(value)) return "";
+  return value;
+}
+
+function requestId() {
+  return window.crypto?.randomUUID ? window.crypto.randomUUID() : `browser-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function onboardingSourceCode(body, status) {
+  const candidates = [
+    body?.error,
+    body?.error?.sourceCode,
+    body?.sourceCode,
+    body?.diagnostic?.sourceCode,
+    body?.diagnostic?.source_code,
+  ];
+  const value = candidates.find((candidate) => typeof candidate === "string" && candidate.trim());
+  return String(value || `HTTP_${status}`).trim().toUpperCase().replace(/[^A-Z0-9_.:-]/g, "_").slice(0, 96);
+}
+
+async function authWorkerRequest(path, options = {}) {
+  const origin = authWorkerOrigin();
+  if (!origin) return null;
+  const headers = new Headers(options.headers || {});
+  headers.set("accept", "application/json");
+  if (options.token) headers.set("authorization", `Bearer ${options.token}`);
+  if (options.sessionId) headers.set("x-cp-session-id", options.sessionId);
+  const request = { ...options, headers, credentials: "omit" };
+  delete request.token;
+  delete request.sessionId;
+  let response;
+  try {
+    response = await fetch(`${origin}${path}`, request);
+  } catch (error) {
+    error.code = AUTH_WORKER_ERROR;
+    throw error;
   }
-
-  function apiOrigin() {
-    const origin = safe(config.apiOrigin || config.authOrigin, 300).replace(/\/+$/, "");
-    return /^https:\/\//i.test(origin) && !/replace|your_|YOUR_/i.test(origin) ? origin : "";
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    const error = new Error(typeof body?.error === "string" ? body.error : `AUTH_WORKER_HTTP_${response.status}`);
+    error.status = response.status;
+    error.code = error.message;
+    throw error;
   }
+  return body;
+}
 
-  function accountSourceCode(body, status) {
-    const candidates = [body?.error, body?.error?.sourceCode, body?.sourceCode, body?.diagnostic?.sourceCode, body?.diagnostic?.source_code];
-    const value = candidates.find((candidate) => typeof candidate === "string" && candidate.trim());
-    return safe(value || `HTTP_${status}`, 96).replace(/[^A-Za-z0-9_.:-]/g, "_").toUpperCase();
-  }
-
-  function storageGet(key) {
-    try { return window.sessionStorage.getItem(key); } catch (_) { return null; }
-  }
-
-  function storageSet(key, value) {
-    try { window.sessionStorage.setItem(key, String(value)); } catch (_) { /* optional browser storage */ }
-  }
-
-  function storageRemove(key) {
-    try { window.sessionStorage.removeItem(key); } catch (_) { /* optional browser storage */ }
-  }
-
-  function requestId() {
-    try { return crypto.randomUUID(); } catch (_) { return `cp-${Date.now()}-${Math.random().toString(16).slice(2)}`; }
-  }
-
-  function currentPageUrl() {
-    try {
-      const url = new URL(window.location.href);
-      url.search = "";
-      url.hash = "";
-      if (url.pathname.endsWith("/index.html")) {
-        url.pathname = url.pathname.slice(0, -"index.html".length) || "/";
-      }
-      return url.href;
-    } catch (_) {
-      return `${safe(window.location.origin, 300)}/`;
-    }
-  }
-
-  function walletMessageUrl() {
-    return currentPageUrl();
-  }
-
-  function isEmbeddedFrame() {
-    try { return window.top !== window.self; } catch (_) { return true; }
-  }
-
-  function stageCode(stage) {
-    const value = String(stage || "auth.client")
-      .replace(/[^A-Za-z0-9]+/g, "_")
-      .replace(/^_+|_+$/g, "")
-      .toUpperCase();
-    return value || "AUTH_CLIENT";
-  }
-
-  function usableErrorCode(value) {
-    const code = safe(value, 100);
-    return code && !/^(unknown|none|null|undefined|n\/a)$/i.test(code) ? code : "";
-  }
-
-  function classifyError(error, stage = error?.stage || "auth.client") {
-    const explicit = usableErrorCode(error?.code);
-    if (explicit) {
-      const normalized = explicit.replace(/[^A-Za-z0-9_.:-]/g, "_").toUpperCase();
-      if (/^(INVALID_GRANT|UNAUTHORIZED|BAD_JWT|INVALID_SIGNATURE)$/.test(normalized)) return "AUTH_PROVIDER_REJECTED";
-      return normalized;
-    }
-    const message = safe(error?.message || error).toLowerCase();
-    const prefix = stageCode(stage);
-    const status = Number(error?.status);
-    if (Number.isInteger(status) && status >= 100 && status <= 599) return `${prefix}_HTTP_${status}`;
-    if (/user rejected|user denied|request rejected|cancelled|canceled/.test(message)) return "WALLET_REQUEST_REJECTED";
-    if (/already pending|request already open/.test(message)) return "WALLET_REQUEST_PENDING";
-    if (/uri|redirect.*not allowed|not allowed.*uri/.test(message)) return "AUTH_REDIRECT_URI_NOT_ALLOWED";
-    if (/invalid_grant|bad_jwt|unauthorized|invalid signature/.test(message)) return "AUTH_PROVIDER_REJECTED";
-    if (/cors|cross-origin|access-control|origin_not_allowed/.test(message)) return `${prefix}_CORS_FAILURE`;
-    if (/failed to fetch|networkerror|network error|load failed|fetch failed/.test(message)) return `${prefix}_NETWORK_FAILURE`;
-    if (/metamask|wallet|ethereum|provider|eth_/.test(message)) return "WALLET_PROVIDER_FAILURE";
-    return `${prefix}_CLIENT_FAILURE`;
-  }
-
-  function normalizeError(error, stage = "auth.client") {
-    const normalized = error instanceof Error
-      ? error
-      : makeError("AUTH_CLIENT_FAILURE", safe(error || "Authentication failed."));
-    if (!normalized.stage) normalized.stage = stage;
-    if (!usableErrorCode(normalized.code)) normalized.code = classifyError(normalized, normalized.stage);
-    const catalog = window.ChestPlayerErrorCatalog || window.__CP_ERROR_CATALOG;
-    if (catalog?.fromError) {
-      normalized.diagnosticRecord = catalog.fromError(normalized, {
-        service: "auth",
-        route: window.location?.pathname || "/login.html",
-        method: "BROWSER",
-      });
-    }
-    return normalized;
-  }
-
-  function diagnostic(error, fallback = "Authentication failed.") {
-    const normalized = normalizeError(error, error?.stage || "auth.client");
-    const message = safe(normalized.message || fallback || "Authentication failed.");
-    const stage = safe(normalized.stage || "auth.client");
-    const code = classifyError(normalized, stage);
-    const returnedRequestId = safe(normalized.requestId || normalized.body?.requestId || "not available");
-    const origin = safe(window.location?.origin || "not available");
-    const page = safe(window.location?.href || "not available", 300);
-    const serverDiagnostic = normalized.body?.diagnostic && typeof normalized.body.diagnostic === "object"
-      ? normalized.body.diagnostic
-      : null;
-    const record = serverDiagnostic || normalized.diagnosticRecord || (window.ChestPlayerErrorCatalog?.resolve?.(code, {
-      service: "auth",
-      route: window.location?.pathname || "/login.html",
-      method: "BROWSER",
-      status: Number.isInteger(normalized.status) ? normalized.status : 0,
-      requestId: returnedRequestId,
-      stage,
-    }));
-    const supportCode = record?.diagnosticCode || code;
-    const sourceCode = record?.sourceCode || code;
-    const analysis = record ? [
-      `Category: ${safe(record.category || "application")}.`,
-      `Failure point: ${safe(record.stage || stage)}.`,
-      `Likely cause: ${safe(record.likelyCause || "Inspect the request ID and first failing boundary.")}`,
-      `Checks: ${Array.isArray(record.checks) ? record.checks.slice(0, 3).map((item) => safe(item)).join(" | ") : "Inspect the matching Worker and Supabase logs."}.`,
-      `Next action: ${safe(record.nextAction || "Send the diagnostic code and request ID to support.")}`,
-      `Retryable: ${record.retryable === true ? "yes" : "no"}.`,
-    ].join(" ") : "Pre-analysis unavailable; preserve the code, page, and request ID for support.";
-    return [
-      `Authentication failed at ${stage}: ${message}.`,
-      `Diagnostic code: ${safe(supportCode)}. Source code: ${safe(sourceCode)}.`,
-      `Request ID: ${returnedRequestId}.`,
-      `Browser origin: ${origin}.`,
-      `Page: ${page}.`,
-      analysis
-    ].join(" ");
-  }
-
-  async function authWorkerRequest(path, options = {}) {
-    const origin = workerOrigin();
-    if (!origin) throw makeError("AUTH_WORKER_NOT_CONFIGURED", "The authentication Worker URL is not configured.", { stage: "auth.worker_config" });
-    const headers = new Headers({ accept: "application/json" });
-    if (options.body !== undefined) headers.set("content-type", "application/json");
-    if (options.token) headers.set("authorization", `Bearer ${options.token}`);
-    const clientRequestId = requestId();
-    let response;
-    try {
-      response = await fetch(`${origin}${path}`, {
-        method: options.method || "GET",
-        headers,
-        credentials: "omit",
-        body: options.body === undefined ? undefined : JSON.stringify(options.body)
-      });
-    } catch (error) {
-      throw makeError("AUTH_WORKER_UNAVAILABLE", "The authentication Worker could not be reached.", {
-        stage: `auth.worker.${path}`,
-        cause: error,
-        requestId: clientRequestId
-      });
-    }
-    const body = await response.json().catch(() => null);
-    const responseRequestId = response.headers.get("x-request-id") || clientRequestId;
-    if (!response.ok) {
-      const code = safe(body?.error || `AUTH_WORKER_HTTP_${response.status}`, 100);
-      throw makeError(code, code, {
-        stage: `auth.worker.${path}`,
-        status: response.status,
-        requestId: responseRequestId,
-        body,
-        diagnostic: body?.diagnostic
-      });
-    }
-    return { body, requestId: responseRequestId };
-  }
-
-  async function checkAuthGateway() {
-    const origin = workerOrigin();
-    if (!origin) throw makeError("AUTH_WORKER_NOT_CONFIGURED", "The authentication Worker URL is not configured.", { stage: "auth.gateway_health" });
-    const clientRequestId = requestId();
-    let response;
-    try {
-      response = await fetch(`${origin}/health`, {
-        method: "GET",
-        headers: { accept: "application/json" },
-        credentials: "omit",
-        cache: "no-store"
-      });
-    } catch (error) {
-      throw makeError("AUTH_GATEWAY_NETWORK_FAILURE", "The public authentication gateway could not be reached.", {
-        stage: "auth.gateway_health",
-        cause: error,
-        requestId: clientRequestId
-      });
-    }
-    const body = await response.json().catch(() => null);
-    const responseRequestId = response.headers.get("x-request-id") || clientRequestId;
-    if (!response.ok) {
-      const code = usableErrorCode(body?.error) || `AUTH_GATEWAY_HTTP_${response.status}`;
-      throw makeError(code, code, {
-        stage: "auth.gateway_health",
-        status: response.status,
-        requestId: responseRequestId,
-        body,
-        diagnostic: body?.diagnostic
-      });
-    }
-    return body;
-  }
-
-  async function getSupabaseClient() {
-    if (!isConfigured()) throw makeError("AUTH_CONFIG_INVALID", "The public authentication configuration is incomplete.", { stage: "auth.config" });
-    if (!clientPromise) {
-      clientPromise = import(config.supabaseSdkUrl).then(({ createClient }) => {
-        if (typeof createClient !== "function") throw makeError("SUPABASE_SDK_INVALID", "The Supabase browser SDK did not load.", { stage: "auth.sdk_load" });
-        return createClient(config.supabaseUrl, config.supabasePublishableKey, {
-          auth: {
-            persistSession: true,
-            autoRefreshToken: true,
-            detectSessionInUrl: true
-          }
-        });
-      }).catch((error) => {
-        if (error?.stage) throw error;
-        throw makeError("SUPABASE_SDK_LOAD_FAILED", "The Supabase browser SDK could not be loaded.", { stage: "auth.sdk_load", cause: error });
-      });
-    }
-    return clientPromise;
-  }
-
-  function walletProviderAvailable(provider) {
-    return Boolean(provider && typeof provider.request === "function");
-  }
-
-  function providerIsMetaMask(provider, detail) {
-    return Boolean(walletProviderAvailable(provider) && (
-      provider.isMetaMask === true
-      || detail?.info?.rdns === "io.metamask"
-      || /metamask/i.test(String(detail?.info?.name || ""))
-    ));
-  }
-
-  function addProvider(detail) {
-    if (!providerIsMetaMask(detail?.provider, detail)) return;
-    if (!announcedProviders.some((item) => item.provider === detail.provider)) announcedProviders.push(detail);
-    attachWalletListeners(detail.provider);
-  }
-
-  function findMetaMaskProvider() {
-    const announced = announcedProviders.find((detail) => providerIsMetaMask(detail.provider, detail));
-    if (announced?.provider) return announced.provider;
-    if (window.ethereum?.isMetaMask) return window.ethereum;
-    return null;
-  }
-
-  function attachWalletListeners(provider) {
-    if (!provider || typeof provider.on !== "function" || listenedProviders.has(provider)) return;
-    listenedProviders.add(provider);
-    provider.on("accountsChanged", (accounts) => {
-      if (!currentSession) return;
-      const next = typeof accounts?.[0] === "string" && /^0x[0-9a-f]{40}$/i.test(accounts[0]) ? accounts[0].toLowerCase() : "";
-      if (!next || next !== walletAddress(currentSession)) void signOut("wallet_changed");
-    });
-    provider.on("chainChanged", (chainId) => {
-      if (currentSession && String(chainId || "").toLowerCase() !== "0x1") void signOut("network_changed");
-    });
-  }
-
-  function discoverWallets() {
-    window.addEventListener("eip6963:announceProvider", (event) => addProvider(event.detail));
-    window.dispatchEvent(new Event("eip6963:requestProvider"));
-    if (window.ethereum?.isMetaMask) addProvider({ provider: window.ethereum, info: { name: "MetaMask", rdns: "io.metamask" } });
-  }
-
-  async function requestWalletAccounts(provider) {
-    if (!walletProviderAvailable(provider)) {
-      throw makeError("METAMASK_UNAVAILABLE", "MetaMask was not detected in this browser.", { stage: "auth.wallet_detect" });
-    }
-    let accounts;
-    try {
-      accounts = await provider.request({ method: "eth_requestAccounts" });
-    } catch (error) {
-      const code = String(error?.code ?? "");
-      if (code === "4001") throw makeError("WALLET_REQUEST_REJECTED", "The MetaMask request was rejected.", { stage: "auth.wallet_request", cause: error });
-      if (code === "-32002") throw makeError("WALLET_REQUEST_PENDING", "A MetaMask request is already open.", { stage: "auth.wallet_request", cause: error });
-      throw makeError("WALLET_REQUEST_FAILED", safe(error?.message || "MetaMask did not return an account."), { stage: "auth.wallet_request", cause: error });
-    }
-    if (!Array.isArray(accounts) || !/^0x[0-9a-f]{40}$/i.test(String(accounts[0] || ""))) {
-      throw makeError("WALLET_ACCOUNT_MISSING", "MetaMask did not return a valid wallet account.", { stage: "auth.wallet_request" });
-    }
-    return accounts;
-  }
-
-  function walletAddress(session) {
-    const identities = Array.isArray(session?.user?.identities) ? session.user.identities : [];
-    for (const identity of identities) {
-      const data = identity?.identity_data && typeof identity.identity_data === "object" ? identity.identity_data : {};
-      const claims = data.custom_claims && typeof data.custom_claims === "object" ? data.custom_claims : {};
-      const candidate = [data.address, data.wallet_address, data.sub, claims.address, claims.wallet_address]
-        .find((value) => typeof value === "string" && /^0x[0-9a-f]{40}$/i.test(value));
-      if (candidate) return candidate.toLowerCase();
-    }
-    const metadata = session?.user?.user_metadata && typeof session.user.user_metadata === "object" ? session.user.user_metadata : {};
-    const fallback = [metadata.address, metadata.wallet_address]
-      .find((value) => typeof value === "string" && /^0x[0-9a-f]{40}$/i.test(value));
-    return fallback ? fallback.toLowerCase() : "";
-  }
-
-  function shortWallet(address) {
-    const value = String(address || "");
-    return /^0x[0-9a-f]{40}$/i.test(value) ? `${value.slice(0, 6)}…${value.slice(-4)}` : value;
-  }
-
-  function markWindowSession(remoteSessionId = "") {
-    const now = Date.now();
-    storageSet(SESSION_MARKER, "metamask");
-    storageSet(SESSION_STARTED, now);
-    storageSet(SESSION_ACTIVITY, now);
-    if (/^[A-Za-z0-9._:-]{8,160}$/.test(String(remoteSessionId))) storageSet(SESSION_ID, remoteSessionId);
-    lastActivityAt = now;
-  }
-
-  function clearWalletSessionMarker() {
-    storageRemove(SESSION_MARKER);
-    storageRemove(SESSION_ID);
-    storageRemove(SESSION_STARTED);
-    storageRemove(SESSION_ACTIVITY);
-    lastActivityAt = 0;
-  }
-
-  function markActivity() {
-    if (!currentSession) return;
-    lastActivityAt = Date.now();
-    storageSet(SESSION_ACTIVITY, lastActivityAt);
-  }
-
-  function validWalletSession(session) {
-    if (!session || storageGet(SESSION_MARKER) !== "metamask") return false;
-    const started = Number(storageGet(SESSION_STARTED));
-    const activity = Number(storageGet(SESSION_ACTIVITY));
-    const now = Date.now();
-    if (!Number.isFinite(started) || now - started >= AUTH_SESSION_MAX_AGE_MS) return false;
-    if (!Number.isFinite(activity) || now - activity >= AUTH_IDLE_TIMEOUT_MS) return false;
-    if (Number.isFinite(Number(session.expires_at)) && Number(session.expires_at) * 1000 <= now) return false;
-    lastActivityAt = activity;
+async function verifyAuthWorkerSession(session, { silent = true } = {}) {
+  const token = session?.access_token;
+  if (!token || !authWorkerOrigin()) return true;
+  try {
+    const body = await authWorkerRequest("/session", { token, sessionId: sessionStorageGet(AUTH_SESSION_ID) });
+    if (body?.sessionId && /^[A-Za-z0-9._:-]{8,160}$/.test(String(body.sessionId))) sessionStorageSet(AUTH_SESSION_ID, String(body.sessionId));
+    const localId = String(session.user?.id || "");
+    const remoteId = String(body?.user?.id || "");
+    if (body?.authenticated !== true || !localId || remoteId !== localId) return false;
+    return true;
+  } catch (error) {
+    // The public API independently validates the same bearer token. A
+    // transient auth Worker outage should not strand an already valid local
+    // session, but an explicit 401 still fails closed.
+    if (Number(error?.status) === 401) return false;
+    if (!silent) console.warn("[ChestPlayer Auth] auth Worker session check unavailable", error);
     return true;
   }
+}
 
-  function emit(name, detail = {}) {
-    window.dispatchEvent(new CustomEvent(name, { detail }));
-  }
-
-  function emitChanged() {
-    const detail = { session: currentSession, walletAddress: walletAddress(currentSession) };
-    emit("chestplayer-auth-changed", detail);
-    // The full game client listens for the legacy event name. Emitting both
-    // keeps the auth-only pages and the game dashboard on one session source.
-    emit("trivia-auth-change", detail);
-  }
-
-  async function verifyWorkerSession(session) {
-    const token = session?.access_token;
-    if (!token) throw makeError("AUTH_SESSION_MISSING", "Supabase returned no access token.", { stage: "auth.session_token" });
-    const result = await authWorkerRequest("/session", {
-      token,
+// Account existence and onboarding are server decisions. The browser must
+// never infer onboarding from wallet metadata or create an account while it
+// is only checking status. The API's ACCOUNT_NOT_ONBOARDED response is the
+// single routing signal for the agreement-gated onboarding page.
+async function checkOnboardingStatus(session = currentSession) {
+  const activeSession = session || currentSession;
+  const token = activeSession?.access_token;
+  if (!activeSession || !token) return { status: "signed_out", sourceCode: "AUTH_REQUIRED" };
+  const origin = apiOrigin();
+  if (!origin) return { status: "error", sourceCode: "API_ORIGIN_NOT_CONFIGURED", requestId: null };
+  const clientRequestId = requestId();
+  try {
+    const response = await fetch(`${origin}/api/account`, {
+      method: "GET",
+      headers: {
+        authorization: `Bearer ${token}`,
+        accept: "application/json",
+        "x-client-version": "chestplayer-ui-2",
+        "x-cp-request-id": clientRequestId,
+      },
+      cache: "no-store",
+      credentials: "omit",
     });
-    const body = result.body || {};
-    const localId = String(session.user?.id || "");
-    const remoteId = String(body.user?.id || "");
-    if (body.authenticated !== true || !localId || remoteId !== localId) {
-      throw makeError("AUTH_SESSION_REJECTED", "The Auth Worker did not verify the Supabase session.", {
-        stage: "auth.worker_session_verify",
-        requestId: result.requestId,
-        status: 401
-      });
-    }
-    return body;
+    const body = await response.json().catch(() => ({}));
+    const responseRequestId = body?.requestId || response.headers.get("x-request-id") || clientRequestId;
+    const sourceCode = onboardingSourceCode(body, response.status);
+    if (response.ok) return { status: "ready", sourceCode: "ACCOUNT_READY", account: body, requestId: responseRequestId };
+    if (sourceCode === "ACCOUNT_NOT_ONBOARDED") return { status: "required", sourceCode, requestId: responseRequestId, diagnostic: body?.diagnostic || null };
+    return { status: "error", sourceCode, httpStatus: response.status, requestId: responseRequestId, diagnostic: body?.diagnostic || null };
+  } catch (error) {
+    return {
+      status: "error",
+      sourceCode: "ONBOARDING_STATUS_NETWORK_FAILED",
+      requestId: clientRequestId,
+      message: String(error?.message || error || "Network request failed").slice(0, 160),
+    };
   }
+}
 
-  // Account status is read from the authenticated API. It is intentionally
-  // separate from wallet authentication: signing in proves wallet control,
-  // while the API decides whether agreement-gated onboarding is complete.
-  async function checkOnboardingStatus(session = currentSession) {
-    const activeSession = session || currentSession;
-    const token = activeSession?.access_token;
-    if (!activeSession || !token) return { status: "signed_out", sourceCode: "AUTH_REQUIRED" };
-    const origin = apiOrigin();
-    if (!origin) return { status: "error", sourceCode: "API_ORIGIN_NOT_CONFIGURED", requestId: null };
-    const clientRequestId = requestId();
-    try {
-      const response = await fetch(`${origin}/api/account`, {
-        method: "GET",
-        headers: {
-          authorization: `Bearer ${token}`,
-          accept: "application/json",
-          "x-client-version": "chestplayer-auth-v5",
-        },
-        credentials: "omit",
-        cache: "no-store",
-      });
-      const body = await response.json().catch(() => ({}));
-      const responseRequestId = body?.requestId || response.headers.get("x-request-id") || clientRequestId;
-      const sourceCode = accountSourceCode(body, response.status);
-      if (response.ok) return { status: "ready", sourceCode: "ACCOUNT_READY", account: body, requestId: responseRequestId };
-      if (sourceCode === "ACCOUNT_NOT_ONBOARDED") return { status: "required", sourceCode, requestId: responseRequestId, diagnostic: body?.diagnostic || null };
-      return { status: "error", sourceCode, httpStatus: response.status, requestId: responseRequestId, diagnostic: body?.diagnostic || null };
-    } catch (error) {
-      return {
-        status: "error",
-        sourceCode: "ONBOARDING_STATUS_NETWORK_FAILED",
-        requestId: clientRequestId,
-        message: safe(error?.message || error || "The account status request failed.", 160),
-      };
-    }
-  }
+function setState(message, tone = "") {
+  const node = $("#authState");
+  if (!node) return;
+  node.className = `auth-state ${tone}`.trim();
+  const dot = document.createElement("span");
+  dot.className = "status-dot";
+  const copy = document.createElement("span");
+  copy.textContent = String(message || "");
+  node.replaceChildren(dot, copy);
+}
 
-  function beginSessionMonitor() {
-    window.clearInterval(sessionMonitor);
-    sessionMonitor = window.setInterval(() => {
-      if (!currentSession) return;
-      const now = Date.now();
-      const started = Number(storageGet(SESSION_STARTED));
-      const activity = Number(storageGet(SESSION_ACTIVITY)) || lastActivityAt;
-      if (!Number.isFinite(started) || now - started >= AUTH_SESSION_MAX_AGE_MS || !Number.isFinite(activity) || now - activity >= AUTH_IDLE_TIMEOUT_MS) {
-        void signOut("expired");
-      }
-    }, 60_000);
-  }
-
-  async function signOut(reason = "manual") {
-    const session = currentSession;
-    const token = session?.access_token || null;
-    clearWalletSessionMarker();
-    currentSession = null;
-    window.clearInterval(sessionMonitor);
-    sessionMonitor = null;
-    emitChanged();
-
-    let remoteError = null;
-    if (token) {
-      try {
-        await authWorkerRequest("/logout", { method: "POST", token });
-      } catch (error) {
-        remoteError = error;
-        console.warn("[ChestPlayer Auth] remote sign-out failed; local cleanup continued", diagnostic(error, "Remote sign-out failed."));
-      }
-    }
-    try {
-      const client = await getSupabaseClient();
-      await client.auth.signOut({ scope: "local" });
-    } catch (error) {
-      remoteError ||= error;
-      console.warn("[ChestPlayer Auth] local sign-out cleanup failed", diagnostic(error, "Local sign-out failed."));
-    }
-    if (reason !== "manual") emit("chestplayer-auth-notice", { reason });
-    return { signedOut: true, remoteError };
-  }
-
-  async function signInWithMetaMask() {
-    if (signInInFlight) throw makeError("SIGN_IN_IN_PROGRESS", "A wallet sign-in request is already open.", { stage: "auth.sign_in" });
-    if (!isConfigured()) throw makeError("AUTH_CONFIG_INVALID", "The public authentication configuration is incomplete.", { stage: "auth.config" });
-    if (isEmbeddedFrame()) throw makeError("AUTH_MUST_BE_TOP_LEVEL", "Open ChestPlayer directly in a browser tab to connect MetaMask.", { stage: "auth.frame_check" });
-
-    const provider = findMetaMaskProvider();
-    if (!provider) throw makeError("METAMASK_UNAVAILABLE", "MetaMask was not detected in this browser.", { stage: "auth.wallet_detect" });
-    attachWalletListeners(provider);
-    signInInFlight = true;
-    emit("chestplayer-auth-progress", { state: "wallet_request" });
-    try {
-      // Keep this as the first wallet operation so the browser treats it as a user-initiated request.
-      await checkAuthGateway();
-      await requestWalletAccounts(provider);
-      emit("chestplayer-auth-progress", { state: "signature_request" });
-      const client = await getSupabaseClient();
-      if (typeof client.auth?.signInWithWeb3 !== "function") {
-        throw makeError("METAMASK_AUTH_UNAVAILABLE", "This Supabase Auth client does not expose MetaMask sign-in.", { stage: "auth.web3_capability" });
-      }
-      const result = await client.auth.signInWithWeb3({
-        chain: "ethereum",
-        statement: config.walletStatement,
-        wallet: provider,
-        options: { url: walletMessageUrl() }
-      });
-      if (result.error) {
-        const error = result.error;
-        error.stage = "auth.web3_sign_in";
-        throw error;
-      }
-      let session = result.data?.session || null;
-      if (!session) {
-        const current = await client.auth.getSession();
-        if (current.error) {
-          current.error.stage = "auth.get_session";
-          throw current.error;
-        }
-        session = current.data?.session || null;
-      }
-      if (!session) throw makeError("AUTH_SESSION_NOT_CREATED", "Supabase did not return a session after the wallet signature.", { stage: "auth.session_create" });
-      const remote = await verifyWorkerSession(session);
-      markWindowSession(remote.sessionId);
-      currentSession = session;
-      beginSessionMonitor();
-      emitChanged();
-      emit("chestplayer-auth-progress", { state: "signed_in" });
-      return session;
-    } catch (error) {
-      const normalized = normalizeError(error, error?.stage || "auth.web3_sign_in");
-      normalized.diagnostic = diagnostic(normalized);
-      emit("chestplayer-auth-error", { error: normalized, diagnostic: normalized.diagnostic });
-      throw normalized;
-    } finally {
-      signInInFlight = false;
-    }
-  }
-
-  async function loadVerifiedSession() {
-    const client = await getSupabaseClient();
-    const result = await client.auth.getSession();
-    if (result.error) {
-      result.error.stage = "auth.get_session";
-      throw result.error;
-    }
-    const session = result.data?.session || null;
-    if (!session) {
-      currentSession = null;
-      clearWalletSessionMarker();
-      return null;
-    }
-    if (!validWalletSession(session)) {
-      await signOut("expired");
-      return null;
-    }
-    try {
-      await verifyWorkerSession(session);
-    } catch (error) {
-      if (Number(error.status) === 401 || error.code === "AUTH_INVALID" || error.code === "AUTH_SESSION_REJECTED") {
-        await signOut("invalid");
-        return null;
-      }
-      throw error;
-    }
-    currentSession = session;
-    beginSessionMonitor();
-    return session;
-  }
-
-  async function getSession() {
-    return loadVerifiedSession();
-  }
-
-  async function getAccessToken() {
-    const session = await getSession();
-    return session?.access_token || null;
-  }
-
-  function updateUi(signedSession) {
-    signedSession ||= currentSession;
-    const signedIn = Boolean(signedSession);
-    const wallet = walletAddress(signedSession);
-    document.querySelectorAll("#signInMetaMask").forEach((button) => {
-      button.hidden = signedIn;
-      if (!signInInFlight) button.disabled = false;
-    });
-    document.querySelectorAll("#authAccount").forEach((panel) => { panel.hidden = !signedIn; });
-    document.querySelectorAll("#authWalletAddress").forEach((node) => {
-      node.textContent = signedIn ? shortWallet(wallet) : "—";
-      node.title = signedIn ? wallet : "";
-    });
-    document.querySelectorAll("#authState").forEach((node) => {
-      node.classList.toggle("is-success", signedIn);
-      node.classList.toggle("is-error", false);
-      node.textContent = signedIn ? "Wallet verified." : "Connect a wallet to continue.";
-    });
-  }
-
-  function setUiMessage(message, tone = "") {
-    document.querySelectorAll("#authState").forEach((node) => {
-      node.className = `auth-state ${tone}`.trim();
-      node.textContent = String(message || "");
-    });
-  }
-
-  function bindAuthUi() {
-    document.querySelectorAll("#signInMetaMask").forEach((button) => {
-      if (button.dataset.authBound === "true") return;
-      button.dataset.authBound = "true";
-      button.addEventListener("click", async () => {
-        if (signInInFlight) return;
-        button.disabled = true;
-        setUiMessage("Waiting for MetaMask…");
-        try {
-          const session = await signInWithMetaMask();
-          updateUi(session);
-          document.querySelector("#authModal")?.setAttribute("hidden", "");
-        } catch (error) {
-          setUiMessage(diagnostic(error), "is-error");
-        } finally {
-          if (!currentSession) button.disabled = false;
-          updateUi(currentSession);
-        }
-      });
-    });
-    document.querySelectorAll("#signOutAuth").forEach((button) => {
-      if (button.dataset.authBound === "true") return;
-      button.dataset.authBound = "true";
-      button.addEventListener("click", async () => {
-        button.disabled = true;
-        setUiMessage("Signing out…");
-        try { await signOut(); } finally { button.disabled = false; updateUi(currentSession); }
-      });
-    });
-    window.addEventListener("chestplayer-auth-ready", (event) => {
-      updateUi(event.detail?.session || null);
-      if (event.detail?.error) setUiMessage(diagnostic(event.detail.error), "is-error");
-    });
-    window.addEventListener("chestplayer-auth-changed", (event) => updateUi(event.detail?.session || null));
-    window.addEventListener("chestplayer-auth-progress", (event) => {
-      if (event.detail?.state === "wallet_request") setUiMessage("Waiting for MetaMask…");
-      if (event.detail?.state === "signature_request") setUiMessage("Review the sign-in request in MetaMask…");
-    });
-    window.addEventListener("chestplayer-auth-error", (event) => setUiMessage(diagnostic(event.detail?.error), "is-error"));
-    updateUi(currentSession);
-  }
-
-  async function boot() {
-    discoverWallets();
-    ["pointerdown", "keydown", "touchstart"].forEach((eventName) => window.addEventListener(eventName, markActivity, { passive: true }));
-    if (!isConfigured()) {
-      const error = makeError("AUTH_CONFIG_INVALID", "The public authentication configuration is incomplete.", { stage: "auth.config" });
-      error.diagnostic = diagnostic(error);
-      emit("chestplayer-auth-ready", { session: null, error, diagnostic: error.diagnostic });
-      emit("trivia-auth-ready", { session: null, error, diagnostic: error.diagnostic });
-      return { session: null, error };
-    }
-    try {
-      const client = await getSupabaseClient();
-      if (!authSubscriptionAttached) {
-        client.auth.onAuthStateChange((event, nextSession) => {
-          if (event === "SIGNED_OUT" || !nextSession) {
-            currentSession = null;
-            clearWalletSessionMarker();
-            window.clearInterval(sessionMonitor);
-            sessionMonitor = null;
-            emitChanged();
-          } else if (event === "TOKEN_REFRESHED" && currentSession && nextSession.user?.id === currentSession.user?.id) {
-            currentSession = nextSession;
-            emitChanged();
-          }
-        });
-        authSubscriptionAttached = true;
-      }
-      const session = await loadVerifiedSession();
-      emitChanged();
-      emit("chestplayer-auth-ready", { session, error: null });
-      emit("trivia-auth-ready", { session, error: null });
-      return { session, error: null };
-    } catch (error) {
-      const normalized = normalizeError(error, error?.stage || "auth.boot");
-      normalized.diagnostic = diagnostic(normalized);
-      currentSession = null;
-      emit("chestplayer-auth-ready", { session: null, error: normalized, diagnostic: normalized.diagnostic });
-      emit("trivia-auth-ready", { session: null, error: normalized, diagnostic: normalized.diagnostic });
-      return { session: null, error: normalized };
-    }
-  }
-
-  const ready = boot();
-  const api = Object.freeze({
-    ready,
-    configured: isConfigured,
-    getSession,
-    getAccessToken,
-    checkOnboardingStatus,
-    getSupabaseClient,
-    getWalletAddress: () => walletAddress(currentSession),
-    getShortWallet: () => shortWallet(walletAddress(currentSession)),
-    signInWithMetaMask,
-    signOut,
-    formatDiagnostic: diagnostic,
-    walletMessageUrl: currentPageUrl
+function authDiagnostic(error, fallback) {
+  const message = String(error?.message || error || fallback || "Authentication failed")
+    .replace(/[\r\n]+/g, " ")
+    .slice(0, 240);
+  const rawCode = String(error?.code ?? (error?.status ? `AUTH_HTTP_${error.status}` : "DIAGNOSTIC_FALLBACK"))
+    .replace(/[^A-Z0-9_.:-]/gi, "_")
+    .slice(0, 80);
+  const origin = String(window.location?.origin || "not available");
+  const page = String(window.location?.href || "not available").split("#")[0].slice(0, 240);
+  const supabase = String(config.supabaseUrl || "not configured").slice(0, 180);
+  const analysis = window.ChestPlayerErrorCatalog?.resolve?.(rawCode, {
+    service: "auth",
+    route: window.location?.pathname || "/",
+    method: "BROWSER",
+    status: Number(error?.status) || 0,
+    requestId: error?.requestId || "not available",
+    stage: error?.stage || "auth.client",
   });
-  window.ChestPlayerAuth = api;
-  window.TriviaArenaAuth = api;
-  bindAuthUi();
-})();
+  const detail = analysis
+    ? `Diagnostic code: ${analysis.diagnosticCode}. Source code: ${analysis.sourceCode}. Category: ${analysis.category}. Failure point: ${analysis.stage}. Likely cause: ${analysis.likelyCause} Checks: ${(analysis.checks || []).slice(0, 3).join(" | ")}. Next action: ${analysis.nextAction} Retryable: ${analysis.retryable ? "yes" : "no"}.`
+    : "Pre-analysis unavailable; preserve the code and page details for support.";
+  return `Authentication failed: ${message}. Browser origin: ${origin}. Page: ${page}. Supabase project: ${supabase}. ${detail}`;
+}
+
+function sessionStorageGet(key) {
+  try { return window.sessionStorage.getItem(key); } catch (_) { return null; }
+}
+
+function sessionStorageSet(key, value) {
+  try { window.sessionStorage.setItem(key, String(value)); } catch (_) { /* optional browser storage */ }
+}
+
+function sessionStorageRemove(key) {
+  try { window.sessionStorage.removeItem(key); } catch (_) { /* optional browser storage */ }
+}
+
+function markSessionActivity() {
+  lastActivityAt = Date.now();
+  sessionStorageSet(AUTH_SESSION_ACTIVITY, lastActivityAt);
+}
+
+function markWalletSession() {
+  const now = Date.now();
+  sessionStorageSet(AUTH_SESSION_MARKER, "wallet");
+  sessionStorageSet(AUTH_SESSION_STARTED, now);
+  sessionStorageSet(AUTH_SESSION_ACTIVITY, now);
+  lastActivityAt = now;
+}
+
+function clearWalletSessionMarker() {
+  sessionStorageRemove(AUTH_SESSION_MARKER);
+  sessionStorageRemove(AUTH_SESSION_ID);
+  sessionStorageRemove(AUTH_SESSION_STARTED);
+  sessionStorageRemove(AUTH_SESSION_ACTIVITY);
+  lastActivityAt = 0;
+}
+
+function validWalletSession(session) {
+  if (!session) return false;
+  if (sessionStorageGet(AUTH_SESSION_MARKER) !== "wallet") return false;
+  const startedAt = Number(sessionStorageGet(AUTH_SESSION_STARTED));
+  const activityAt = Number(sessionStorageGet(AUTH_SESSION_ACTIVITY));
+  const now = Date.now();
+  if (!Number.isFinite(startedAt) || now - startedAt >= AUTH_SESSION_MAX_AGE_MS) return false;
+  if (!Number.isFinite(activityAt) || now - activityAt >= AUTH_IDLE_TIMEOUT_MS) return false;
+  if (Number.isFinite(Number(session.expires_at)) && Number(session.expires_at) * 1000 <= now) return false;
+  lastActivityAt = activityAt;
+  return true;
+}
+
+function startSessionMonitor() {
+  window.clearInterval(sessionMonitor);
+  sessionMonitor = window.setInterval(() => {
+    if (!currentSession) return;
+    const now = Date.now();
+    const startedAt = Number(sessionStorageGet(AUTH_SESSION_STARTED));
+    const activityAt = Number(sessionStorageGet(AUTH_SESSION_ACTIVITY)) || lastActivityAt;
+    if (!Number.isFinite(startedAt) || now - startedAt >= AUTH_SESSION_MAX_AGE_MS || !Number.isFinite(activityAt) || now - activityAt >= AUTH_IDLE_TIMEOUT_MS) {
+      void endSession("expired");
+    }
+  }, 60_000);
+}
+
+function attachWalletListeners(provider) {
+  if (!provider || typeof provider.on !== "function" || walletListeners.has(provider)) return;
+  walletListeners.add(provider);
+  provider.on("accountsChanged", (accounts) => {
+    const active = sessionAddress(currentSession);
+    const next = typeof accounts?.[0] === "string" && /^0x[0-9a-f]{40}$/i.test(accounts[0]) ? accounts[0].toLowerCase() : "";
+    if (currentSession && (!next || !active || next !== active)) void endSession("wallet_changed");
+  });
+  provider.on("chainChanged", (chainId) => {
+    if (currentSession && String(chainId || "").toLowerCase() !== "0x1") void endSession("network_changed");
+  });
+}
+
+async function endSession(reason = "manual") {
+  const remoteToken = currentSession?.access_token || null;
+  const remoteSessionId = sessionStorageGet(AUTH_SESSION_ID);
+  clearWalletSessionMarker();
+  window.clearInterval(sessionMonitor);
+  sessionMonitor = null;
+  currentSession = null;
+  updateUi(null);
+  let failure = null;
+  if (remoteToken) {
+    try { await authWorkerRequest("/logout", { method: "POST", token: remoteToken, sessionId: remoteSessionId }); }
+    catch (error) { console.warn("[ChestPlayer Auth] remote sign-out unavailable; continuing with local cleanup", error); }
+  }
+  try {
+    const supabase = await getSupabaseClient();
+    const { error } = await supabase.auth.signOut({ scope: "local" });
+    if (error) failure = error;
+  } catch (error) {
+    failure = error;
+  }
+  if (failure) {
+    console.error("[ChestPlayer Auth] local sign-out cleanup completed with Supabase error", failure);
+    setState(authDiagnostic(failure, "Local sign-out completed, but Supabase could not revoke the remote session."), "is-warning");
+  } else if (reason === "expired" || reason === "wallet_changed" || reason === "network_changed") {
+    setState("Your wallet session ended. Sign in again to continue.", "is-warning");
+  }
+}
+
+function shortAddress(address) {
+  const value = String(address || "");
+  return /^0x[0-9a-f]{10,}$/i.test(value) ? `${value.slice(0, 6)}…${value.slice(-4)}` : value;
+}
+
+function sessionAddress(session) {
+  for (const identity of session?.user?.identities || []) {
+    const data = identity?.identity_data || {};
+    const claims = data.custom_claims && typeof data.custom_claims === "object" ? data.custom_claims : {};
+    const address = [data.address, data.wallet_address, data.sub, claims.address, claims.wallet_address].find((value) => typeof value === "string" && /^0x[0-9a-f]{40}$/i.test(value));
+    if (typeof address === "string" && /^0x[0-9a-f]{40}$/i.test(address)) return address.toLowerCase();
+  }
+  return "";
+}
+
+function updateUi(session) {
+  currentSession = session || null;
+  const address = sessionAddress(session);
+  const triggerLabel = $("#authTriggerLabel");
+  const account = $("#authAccount");
+  const accountAddress = $("#authWalletAddress");
+  const loginButton = $("#signInMetaMask");
+  if (session) {
+    if (triggerLabel) triggerLabel.textContent = shortAddress(address) || tr("auth.walletConnected", "Wallet connected");
+    if (account) account.hidden = false;
+    if (accountAddress) accountAddress.textContent = address || tr("auth.verifiedSession", "Verified Supabase session");
+    if (loginButton) loginButton.querySelector("strong").textContent = tr("auth.walletConnected", "Wallet connected");
+    setState(tr("auth.walletVerified", "Wallet verified by Supabase."), "is-ready");
+  } else {
+    if (triggerLabel) triggerLabel.textContent = tr("auth.signInSignUp", "Sign in / Sign up");
+    if (account) account.hidden = true;
+    if (loginButton) loginButton.querySelector("strong").textContent = tr("auth.metaMask", "Continue with MetaMask");
+    setState(configured() ? tr("auth.connectWallet", "Connect a wallet to continue.") : tr("auth.configure", "Add your Supabase values to auth-config.js first."), configured() ? "" : "is-warning");
+  }
+  updateMobileAuthUi();
+  window.dispatchEvent(new CustomEvent("trivia-auth-change", { detail: { session: currentSession } }));
+}
+
+function addProvider(detail) {
+  const name = String(detail?.info?.name || "");
+  const rdns = String(detail?.info?.rdns || "");
+  const provider = detail?.provider;
+  if (!provider || !(provider.isMetaMask || rdns === "io.metamask" || /metamask/i.test(name))) return;
+  if (providers.some((item) => item.provider === provider)) return;
+  providers.push(detail);
+  $("#authWalletList")?.replaceChildren();
+  updateMobileAuthUi();
+}
+
+function discoverWallets() {
+  window.addEventListener("eip6963:announceProvider", (event) => {
+    addProvider(event.detail);
+    if (event.detail?.provider?.isMetaMask || event.detail?.info?.rdns === "io.metamask") {
+      attachWalletListeners(event.detail.provider);
+    }
+  });
+  window.dispatchEvent(new Event("eip6963:requestProvider"));
+  if (window.ethereum?.isMetaMask) {
+    addProvider({ provider: window.ethereum, info: { name: "MetaMask", rdns: "io.metamask" } });
+    attachWalletListeners(window.ethereum);
+  }
+  updateMobileAuthUi();
+}
+
+async function getSupabaseClient() {
+  if (!configured()) throw new Error("Configure Supabase first.");
+  if (!clientPromise) {
+    clientPromise = import(config.supabaseSdkUrl).then(({ createClient }) => {
+      if (typeof createClient !== "function") throw new Error("SUPABASE_SDK_INVALID");
+      return createClient(config.supabaseUrl, config.supabasePublishableKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+    });
+  }
+  return clientPromise;
+}
+
+function findMetaMaskProvider() {
+  const announced = providers.find((item) => {
+    const name = String(item.info?.name || "");
+    const rdns = String(item.info?.rdns || "");
+    return rdns === "io.metamask" || /metamask/i.test(name) || item.provider?.isMetaMask;
+  });
+  if (announced?.provider) return announced.provider;
+  if (window.ethereum?.isMetaMask) return window.ethereum;
+  return null;
+}
+
+function isMetaMaskProvider(provider) {
+  if (!provider) return false;
+  if (provider.isMetaMask) return true;
+  const detail = providers.find((item) => item.provider === provider);
+  return detail?.info?.rdns === "io.metamask" || /metamask/i.test(String(detail?.info?.name || ""));
+}
+
+function isEmbeddedFrame() {
+  try { return window.top !== window.self; } catch (_) { return true; }
+}
+
+function setAuthModalOpen(open) {
+  const modal = $("#authModal");
+  if (!modal) return;
+  modal.hidden = !open;
+  modal.setAttribute("aria-hidden", open ? "false" : "true");
+  document.body.classList.toggle("auth-dialog-open", open);
+  if (open) window.requestAnimationFrame?.(() => $("#signInMetaMask")?.focus());
+}
+
+function isMobileDevice() {
+  const userAgent = String(navigator.userAgent || "");
+  const touchScreen = typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches;
+  return Boolean(navigator.userAgentData?.mobile)
+    || /Android|iPhone|iPad|iPod|Mobile/i.test(userAgent)
+    || (touchScreen && Math.min(window.innerWidth || 0, window.innerHeight || 0) <= 900);
+}
+
+function mobileMetaMaskUrl() {
+  try {
+    const current = new URL(window.location.href);
+    if (!/^https?:$/i.test(current.protocol)) return "";
+    // MetaMask's current mobile dapp deeplink accepts the dapp URL as its
+    // path parameter. Encode the full target so locale query strings remain
+    // part of the dapp URL instead of becoming deeplink parameters.
+    const dappUrl = `${current.host}${current.pathname}${current.search}${current.hash}`;
+    return `https://link.metamask.io/dapp/${encodeURIComponent(dappUrl)}`;
+  } catch (_) {
+    return "";
+  }
+}
+
+function updateMobileAuthUi() {
+  const button = $("#openMetaMaskMobile");
+  const hint = $("#walletMobileHint");
+  if (!button) return;
+  const shouldShow = isMobileDevice() && !currentSession && !findMetaMaskProvider() && Boolean(mobileMetaMaskUrl());
+  button.hidden = !shouldShow;
+  if (hint) hint.hidden = !shouldShow;
+}
+
+function openMetaMaskMobile() {
+  const target = mobileMetaMaskUrl();
+  if (!target) return setState(tr("auth.installWallet", "Install the MetaMask mobile app to continue."), "is-warning");
+  setState(tr("auth.mobileOpening", "Opening MetaMask…"));
+  window.location.assign(target);
+}
+
+function walletProviderAvailable(provider) {
+  return Boolean(provider && typeof provider.request === "function");
+}
+
+// Call the wallet permission method immediately from the click handler. Some
+// browsers and wallet extensions reject eth_requestAccounts when the first
+// request happens only after an asynchronous SDK import.
+function requestWalletAccounts(provider) {
+  if (!walletProviderAvailable(provider)) throw new Error("METAMASK_UNAVAILABLE");
+  const request = provider.request({ method: "eth_requestAccounts" });
+  return Promise.resolve(request).then((accounts) => {
+    if (!Array.isArray(accounts) || typeof accounts[0] !== "string" || !/^0x[0-9a-f]{40}$/i.test(accounts[0])) {
+      throw new Error("WALLET_NO_ACCOUNT");
+    }
+    return accounts;
+  });
+}
+
+// Supabase validates the URI embedded in the SIWE message against Auth's
+// redirect allow-list. Locale query strings such as ?lang=es are UI state,
+// not a different application. Pass the URL explicitly instead of mutating
+// browser history: auth-js supports options.url and MetaMask can then see the
+// exact URL that Supabase will validate. Keep the visible locale unchanged.
+function walletMessageUrl() {
+  const current = new URL(window.location.href);
+  current.search = "";
+  current.hash = "";
+  if (current.pathname === "/index.html") current.pathname = "/";
+  return current.href;
+}
+
+async function signInWithMetaMask(wallet) {
+  if (!configured()) return setState(tr("auth.configureSignIn", "Edit auth-config.js with your Supabase URL and publishable key."), "is-warning");
+  if (isEmbeddedFrame()) return setState(tr("auth.frameWallet", "Open chestplayer.us directly for wallet sign-in. Masked forwarding cannot securely connect MetaMask."), "is-warning");
+  const provider = wallet || findMetaMaskProvider();
+  if (!walletProviderAvailable(provider) || !isMetaMaskProvider(provider)) return setState(tr("auth.installWallet", "Install the MetaMask browser extension to continue."), "is-warning");
+  attachWalletListeners(provider);
+  if (signInInFlight) return setState(tr("auth.signInPending", "A wallet sign-in request is already open. Finish it in your wallet first."), "is-warning");
+  signInInFlight = true;
+  setState(tr("auth.waitingSignature", "Waiting for wallet signature…"));
+  try {
+    // This must be the first asynchronous wallet operation. Supabase will
+    // request the accounts again while building the SIWE message; that second
+    // call is safe after the permission has already been granted.
+    await requestWalletAccounts(provider);
+    const supabase = await getSupabaseClient();
+    if (typeof supabase.auth?.signInWithWeb3 !== "function") throw new Error("METAMASK_AUTH_UNAVAILABLE");
+    const { data, error } = await supabase.auth.signInWithWeb3({
+      chain: "ethereum",
+      statement: config.walletStatement,
+      wallet: provider,
+      options: { url: walletMessageUrl() },
+    });
+    if (error) throw error;
+    let signedSession = data?.session || null;
+    if (!data?.session) {
+      const { data: current } = await supabase.auth.getSession();
+      signedSession = current?.session || null;
+      if (!signedSession) throw new Error("AUTH_SESSION_NOT_CREATED");
+    }
+    if (!(await verifyAuthWorkerSession(signedSession, { silent: false }))) throw new Error("AUTH_SESSION_REJECTED");
+    markWalletSession();
+    startSessionMonitor();
+    // signInWithWeb3 can resolve before Supabase emits SIGNED_IN. Publish the
+    // verified session here as well so the landing-page router always runs its
+    // server-side onboarding check after a successful MetaMask sign-in.
+    updateUi(signedSession);
+    setState(tr("auth.walletVerified", "Wallet verified by Supabase."), "is-ready");
+  } catch (error) {
+    setState(authDiagnostic(error, tr("auth.walletRequestFailed", "MetaMask did not respond.")), "is-warning");
+  } finally {
+    signInInFlight = false;
+  }
+}
+
+async function signOut() {
+  await endSession("manual");
+}
+
+async function boot() {
+  discoverWallets();
+  ["pointerdown", "keydown", "touchstart"].forEach((eventName) => window.addEventListener(eventName, markSessionActivity, { passive: true }));
+  $("#authTrigger")?.addEventListener("click", () => setAuthModalOpen(true));
+  $("[data-close-auth]")?.addEventListener("click", () => setAuthModalOpen(false));
+  $("#authModal")?.addEventListener("click", (event) => { if (event.target.id === "authModal") setAuthModalOpen(false); });
+  $("#openMetaMaskMobile")?.addEventListener("click", openMetaMaskMobile);
+  $("#signInMetaMask")?.addEventListener("click", () => signInWithMetaMask(findMetaMaskProvider()));
+  $("#signOutAuth")?.addEventListener("click", signOut);
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape") setAuthModalOpen(false); });
+  window.addEventListener("resize", updateMobileAuthUi, { passive: true });
+  window.addEventListener("orientationchange", updateMobileAuthUi, { passive: true });
+  updateMobileAuthUi();
+  updateUi(null);
+  if (!configured()) {
+    // Page routers must not wait forever when a deployment has a bad public
+    // config. They can show the configuration state or return to the landing
+    // page without treating an absent session as an authenticated user.
+    window.dispatchEvent(new CustomEvent("trivia-auth-ready", { detail: { session: null, error: new Error("AUTH_CONFIG_REQUIRED") } }));
+    return;
+  }
+  try {
+    const supabase = await getSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    const remoteValid = session ? await verifyAuthWorkerSession(session) : true;
+    if (session && (!validWalletSession(session) || !remoteValid)) {
+      await endSession("expired");
+    } else {
+      updateUi(session);
+      if (session) startSessionMonitor();
+    }
+    supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (!nextSession) {
+        clearWalletSessionMarker();
+        window.clearInterval(sessionMonitor);
+        sessionMonitor = null;
+        updateUi(null);
+        return;
+      }
+      if (event === "SIGNED_IN") markWalletSession();
+      if (validWalletSession(nextSession)) {
+        updateUi(nextSession);
+        startSessionMonitor();
+      } else if (event !== "TOKEN_REFRESHED") {
+        void endSession("expired");
+      }
+    });
+    window.dispatchEvent(new CustomEvent("trivia-auth-ready", { detail: { session: currentSession } }));
+  } catch (error) {
+    setState(authDiagnostic(error, tr("auth.unavailable", "Supabase auth is unavailable.")), "is-warning");
+    window.dispatchEvent(new CustomEvent("trivia-auth-ready", { detail: { session: null, error } }));
+  }
+}
+
+window.TriviaArenaAuth = {
+  getAccessToken: async () => {
+    const supabase = await getSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || !validWalletSession(session)) {
+      if (session) void endSession("expired");
+      return null;
+    }
+    return session.access_token || null;
+  },
+  getWalletAddress: () => sessionAddress(currentSession),
+  checkOnboardingStatus,
+  getSupabaseClient,
+  openAuth: () => setAuthModalOpen(true),
+  closeAuth: () => setAuthModalOpen(false),
+  signInWithMetaMask: () => signInWithMetaMask(findMetaMaskProvider()),
+  signOut,
+};
+
+boot();
