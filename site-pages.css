@@ -272,13 +272,15 @@ body.site-page {
 .site-policy-list label { display: flex; gap: 8px; }
 .site-policy-list input { width: auto; min-height: auto; }
 
-.auth-modal-card { max-width: 460px; margin: 10vh auto; }
-.site-modal { position: fixed; inset: 0; z-index: 20; padding: 20px; overflow: auto; background: rgba(3, 7, 16, .84); }
+.auth-modal-card { width: min(100%, 460px); max-width: 460px; margin: 10vh auto; }
+.site-modal { position: fixed; inset: 0; z-index: 20; display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; justify-items: center; padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left)); overflow: auto; overscroll-behavior: contain; background: rgba(3, 7, 16, .84); }
 .site-modal[hidden] { display: none; }
 .site-modal .modal-card { padding: 28px; border: 1px solid rgba(163, 184, 225, .22); border-radius: 22px; background: #0c1428; box-shadow: 0 30px 90px rgba(0, 0, 0, .48); }
 .site-modal .modal-close { float: right; border: 0; color: #aab6d2; background: transparent; font-size: 1.6rem; cursor: pointer; }
-.auth-state { display: flex; gap: 8px; align-items: center; margin-top: 16px; color: #9eabc9; font-size: .9rem; }
-.auth-account { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding: 12px; border-radius: 12px; background: rgba(119, 245, 223, .08); }
+.auth-state { display: flex; gap: 8px; align-items: center; min-width: 0; margin-top: 16px; color: #9eabc9; font-size: .9rem; }
+.auth-state > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+.auth-account { display: flex; align-items: center; justify-content: space-between; min-width: 0; gap: 12px; margin-top: 14px; padding: 12px; border-radius: 12px; background: rgba(119, 245, 223, .08); }
+.auth-account > div { min-width: 0; }
 .wallet-login-button { display: flex; align-items: center; width: 100%; gap: 12px; margin-top: 12px; padding: 14px; border: 1px solid rgba(163, 184, 225, .2); border-radius: 12px; color: #eff4ff; background: #111d39; text-align: left; cursor: pointer; }
 .wallet-login-button strong, .wallet-login-button small { display: block; }
 .wallet-login-button small { margin-top: 3px; color: #93a1c0; }
@@ -299,4 +301,49 @@ body.site-page {
   .site-main { padding-top: 34px; }
   .onboarding-form .onboarding-grid, .site-policy-list { grid-template-columns: 1fr; }
   .site-hero h1 { font-size: 2.8rem; }
+}
+
+/* Responsive page contract for landing, onboarding, policies, FAQ, and support. */
+@media (max-width: 680px) {
+  body.site-page { overflow-x: hidden; }
+  .site-page-shell { width: min(calc(100% - 24px), 1120px); padding-top: 14px; padding-bottom: 34px; }
+  .site-header { gap: 14px; padding-bottom: 16px; }
+  .site-brand { font-size: .9rem; }
+  .site-brand-mark { width: 34px; height: 34px; }
+  .site-nav { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .site-nav a { display: flex; align-items: center; justify-content: center; min-height: 44px; }
+  .site-locale { width: 100%; min-height: 44px; grid-column: 1 / -1; }
+  .site-main { padding-top: 32px; }
+  .site-hero { gap: 22px; }
+  .site-hero h1 { font-size: clamp(2.55rem, 13vw, 4rem); }
+  .site-hero p, .site-page-intro { font-size: 1rem; }
+  .site-visual { min-height: 220px; padding: 18px; border-radius: 20px; }
+  .site-orbit { min-height: 180px; }
+  .site-orbit strong { font-size: 2.8rem; }
+  .site-actions { display: grid; grid-template-columns: 1fr; }
+  .site-button { width: 100%; min-height: 48px; }
+  .site-cards, .site-faq-grid, .site-support-grid { gap: 12px; margin-top: 24px; }
+  .site-card, .site-form-card, .site-legal-card { padding: 18px; border-radius: 14px; }
+  .site-footer { gap: 8px; }
+  .onboarding-form .onboarding-grid, .site-policy-list { grid-template-columns: 1fr; }
+  .site-modal { padding: 8px; }
+  .site-modal .modal-card {
+    max-height: calc(100vh - 16px);
+    max-height: calc(100dvh - 16px);
+    overflow: auto;
+    padding: 20px 16px;
+    border-radius: 14px;
+  }
+  .auth-modal-card { width: 100%; margin: 0 auto; }
+  .wallet-login-button { min-height: 56px; }
+  .wallet-mobile-button { min-height: 56px; }
+  .auth-account { align-items: stretch; flex-direction: column; }
+  .auth-account button { width: 100%; min-height: 44px; }
+  .site-checklist label, .site-policy-list label { min-height: 44px; align-items: center; }
+  .site-checklist input, .site-policy-list input { width: 20px; height: 20px; flex: 0 0 20px; }
+}
+
+@media (min-width: 681px) and (max-width: 820px) {
+  .site-nav { gap: 6px; }
+  .site-nav a, .site-locale { min-height: 42px; }
 }
