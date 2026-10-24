@@ -47,10 +47,13 @@ h3 { margin-bottom: 0; font-size: 16px; }
 .muted { margin-bottom: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
 code { color: var(--teal); font-family: "SFMono-Regular", Consolas, monospace; font-size: .92em; }
 .auth-actions { flex-wrap: wrap; justify-content: flex-end; gap: 9px; }
-.auth-state, .auth-account { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 28px; color: var(--muted); font-size: 12px; }
+.auth-state, .auth-account { display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; min-height: 28px; color: var(--muted); font-size: 12px; }
+.auth-state > span:last-child { min-width: 0; overflow-wrap: anywhere; }
 .auth-state.is-ready { color: var(--teal); }
 .auth-state.is-warning { color: var(--gold); }
-.auth-account { justify-content: space-between; padding: 10px 12px; border: 1px solid rgba(66, 225, 194, .23); border-radius: 11px; background: rgba(66, 225, 194, .06); }
+.auth-account { justify-content: space-between; min-width: 0; padding: 10px 12px; border: 1px solid rgba(66, 225, 194, .23); border-radius: 11px; background: rgba(66, 225, 194, .06); }
+.auth-account > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.mobile-wallet-button[hidden] { display: none; }
 .auth-account small { display: block; color: var(--faint); font-size: 8px; letter-spacing: .12em; }
 .auth-account strong { display: block; margin-top: 3px; font-family: "SFMono-Regular", Consolas, monospace; font-size: 11px; }
 .button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 40px; padding: 10px 14px; border: 1px solid transparent; border-radius: 10px; color: var(--text); cursor: pointer; font-size: 11px; font-weight: 800; letter-spacing: .02em; transition: transform .18s ease, border-color .18s ease, opacity .18s ease, background .18s ease; }
@@ -152,6 +155,7 @@ textarea { min-height: 92px; resize: vertical; }
   .header-actions, .toolbar-controls { width: 100%; justify-content: space-between; }
   .auth-panel { grid-template-columns: 1fr; gap: 16px; }
   .auth-actions { justify-content: flex-start; }
+  .auth-actions > .button { width: 100%; min-height: 48px; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .detail-grid { grid-template-columns: repeat(2, 1fr); }
   .kyc-doc-grid { grid-template-columns: 1fr; }
