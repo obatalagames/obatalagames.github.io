@@ -37,7 +37,7 @@
         </section>
 
         <section class="site-cards" aria-label="Game formats">
-          <article class="site-card"><div class="site-kicker" data-i18n="landing.quickKicker">1 · QUICK DUEL</div><h2 data-i18n="landing.quickTitle">10-10 Flash Trivia</h2><p data-i18n="landing.quickSingleAttempt">Ten easy-to-medium multiple-choice questions. A wrong answer or timeout skips the question and keeps the answer hidden.</p><a class="site-link" data-requires-auth="true" href="dashboard.html?view=flash" data-i18n="landing.quickLink">Find a match →</a></article>
+          <article class="site-card"><div class="site-kicker" data-i18n="landing.quickKicker">1 · QUICK DUEL</div><h2 data-i18n="landing.quickTitle">10-10 Flash Trivia</h2><p data-i18n="landing.quickCopy">Ten easy-to-medium multiple-choice questions. Miss or time out and the same question goes to your opponent.</p><a class="site-link" data-requires-auth="true" href="dashboard.html?view=flash" data-i18n="landing.quickLink">Find a match →</a></article>
           <article class="site-card"><div class="site-kicker" data-i18n="landing.scheduledKicker">2 · SCHEDULED MATCH</div><h2 data-i18n="landing.scheduledTitle">5x5 ChestPlayer</h2><p data-i18n="landing.scheduledCopy">Five players, a fixed $100 USDT entry, and a 25-clue write-in board. Rooms run every two hours when full.</p><a class="site-link" data-requires-auth="true" href="dashboard.html?view=box" data-i18n="landing.scheduledLink">See scheduled matches →</a></article>
           <article class="site-card"><div class="site-kicker" data-i18n="landing.walletKicker">3 · READY WHEN YOU ARE</div><h2 data-i18n="landing.walletTitle">One wallet, one destination</h2><p data-i18n="landing.walletCopy">Your wallet signs in, your account is created automatically, and payouts go only to the wallet saved during setup.</p><a class="site-link" href="support.html" data-i18n="landing.walletLink">Get help →</a></article>
         </section>
@@ -53,6 +53,7 @@
         <h2 id="authModalTitle" data-i18n="auth.modalTitle">Enter the arena</h2>
         <p data-i18n="auth.modalCopy">Sign in or create your account with MetaMask. Approve the sign-in message in MetaMask; your private key stays in your wallet.</p>
         <button class="wallet-login-button" id="signInMetaMask" type="button"><span class="wallet-button-mark">◇</span><span><strong>Continue with MetaMask</strong><small>Sign in securely with MetaMask</small></span><span class="wallet-arrow">→</span></button>
+        <button class="wallet-mobile-button" id="openMetaMaskMobile" type="button" hidden><span class="wallet-button-mark">↗</span><span><strong data-i18n="auth.mobileOpen">Open in MetaMask</strong><small data-i18n="auth.mobileHint">On your phone, open ChestPlayer inside MetaMask's in-app browser to connect your wallet.</small></span><span class="wallet-arrow">→</span></button>
         <div id="authWalletList" hidden></div>
         <div class="auth-state" id="authState"><span class="status-dot"></span><span data-i18n="auth.connectWallet">Connect a wallet to continue.</span></div>
         <div class="auth-account" id="authAccount" hidden><div><small data-i18n="auth.connectedWallet">CONNECTED WALLET</small><strong id="authWalletAddress">—</strong></div><button class="site-link-button" id="signOutAuth" type="button" data-i18n="auth.signOut">Sign out</button></div>
@@ -64,6 +65,6 @@
     <script src="i18n.js"></script>
     <script src="site-router.js"></script>
     <script src="error-catalog.js?v=20261022-error-catalog"></script>
-    <script type="module" src="auth.js?v=20261023-auth10"></script>
+    <script type="module" src="auth.js?v=20261022-auth9"></script>
   </body>
 </html>
