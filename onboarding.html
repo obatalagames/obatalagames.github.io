@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en" data-i18n-title="meta.title.onboarding">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#070b16" />
+    <title>ChestPlayer · Account setup</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="site-pages.css" />
+  </head>
+  <body class="site-page onboarding-page">
+    <div class="site-page-shell">
+      <header class="site-header">
+        <a class="site-brand" href="index.html"><span class="site-brand-mark">ϟ</span><span>CHESTPLAYER</span></a>
+        <nav class="site-nav" aria-label="Setup navigation"><a href="faq.html" data-i18n="nav.faq">FAQ</a><a href="support.html" data-i18n="site.support">Support</a><select class="site-locale" id="localeSelect" aria-label="Language"><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="it">Italiano</option><option value="el">Ελληνικά</option><option value="de">Deutsch</option><option value="cs">Čeština</option><option value="pl">Polski</option><option value="tr">Türkçe</option><option value="ru">Русский</option></select></nav>
+      </header>
+
+      <main class="site-main">
+        <div class="site-page-heading"><div class="site-kicker" data-i18n="onboarding.oneTime">ONE-TIME SETUP</div><h1 class="site-page-title" data-i18n="onboarding.saveAccount">Save your player account.</h1><p class="site-page-intro" data-i18n="onboarding.copy">Your wallet has signed in. Confirm the details below and accept both agreements to create your ChestPlayer account. Your payout wallet is locked after saving.</p><div class="site-status" id="onboardingState" role="status" aria-live="polite" data-i18n="onboarding.checking">Checking your wallet session…</div></div>
+        <section class="site-form-card">
+          <form class="onboarding-form" id="onboardingForm" novalidate>
+            <div class="onboarding-grid">
+              <label class="input-label" for="onboardingUsername"><span data-i18n="onboarding.username">Player username</span><input id="onboardingUsername" type="text" minlength="3" maxlength="24" pattern="[A-Za-z][A-Za-z0-9_]{2,23}" autocomplete="username" placeholder="your_name" required /></label>
+              <label class="input-label" for="onboardingWallet"><span data-i18n="onboarding.linkedWallet">Linked wallet</span><input id="onboardingWallet" type="text" autocomplete="off" readonly /></label>
+              <label class="input-label" for="onboardingChain"><span data-i18n="onboarding.networkId">Network ID</span><input id="onboardingChain" type="number" min="1" step="1" value="1" required /></label>
+              <label class="input-label" for="securityQuestionKey"><span data-i18n="onboarding.securityQuestion">Security question</span><select id="securityQuestionKey"><option value="first_pet" data-i18n="onboarding.firstPet">First pet</option><option value="birth_city" data-i18n="onboarding.birthCity">Birth city</option><option value="favorite_teacher" data-i18n="onboarding.favoriteTeacher">Favorite teacher</option></select></label>
+              <label class="input-label" for="securityAnswer"><span data-i18n="onboarding.securityAnswer">Security answer</span> <span class="optional-label" data-i18n="onboarding.payoutNeeded">needed before a payout</span><input id="securityAnswer" type="password" autocomplete="off" /></label>
+              <label class="input-label" for="onboardingCashoutCode"><span data-i18n="payout.cashout">Cashout code</span> <span class="optional-label" data-i18n="onboarding.payoutNeeded">needed before a payout</span><input id="onboardingCashoutCode" type="password" minlength="10" autocomplete="new-password" /></label>
+            </div>
+
+            <div class="site-checklist">
+              <label><input id="termsAccepted" type="checkbox" required /> <span data-i18n="onboarding.agreeTerms">I agree to the</span> <a href="termsofuse.html" target="_blank" rel="noopener noreferrer">Terms of Use</a>.</label>
+              <label><input id="privacyAccepted" type="checkbox" required /> <span data-i18n="onboarding.ackPrivacy">I acknowledge the</span> <a href="privacypolicy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.</label>
+            </div>
+            <p class="fine-print" data-i18n="onboarding.readSections">Read both documents, then confirm all sections below. Terms v2026-10-18 · Privacy v2026-10-18.</p>
+            <div class="site-policy-list" aria-label="Required agreement sections">
+              <label><input data-policy-section="terms" value="1" type="checkbox" /> <span data-i18n="onboarding.terms1">Terms 1 · Agreement and eligibility</span></label><label><input data-policy-section="terms" value="2" type="checkbox" /> <span data-i18n="onboarding.terms2">Terms 2 · Accounts and wallet security</span></label><label><input data-policy-section="terms" value="3" type="checkbox" /> <span data-i18n="onboarding.terms3">Terms 3 · Matches and answers</span></label><label><input data-policy-section="terms" value="4" type="checkbox" /> <span data-i18n="onboarding.terms4">Terms 4 · Entries and payouts</span></label><label><input data-policy-section="terms" value="5" type="checkbox" /> <span data-i18n="onboarding.terms5">Terms 5 · Fair play and recordings</span></label><label><input data-policy-section="terms" value="6" type="checkbox" /> <span data-i18n="onboarding.terms6">Terms 6 · Cancellations and errors</span></label><label><input data-policy-section="terms" value="7" type="checkbox" /> <span data-i18n="onboarding.terms7">Terms 7 · Daily gifts</span></label><label><input data-policy-section="terms" value="8" type="checkbox" /> <span data-i18n="onboarding.terms8">Terms 8 · Intellectual property</span></label><label><input data-policy-section="terms" value="9" type="checkbox" /> <span data-i18n="onboarding.terms9">Terms 9 · Disclaimers and limits</span></label><label><input data-policy-section="terms" value="10" type="checkbox" /> <span data-i18n="onboarding.terms10">Terms 10 · Changes and contact</span></label><label><input data-policy-section="privacy" value="1" type="checkbox" /> <span data-i18n="onboarding.privacy1">Privacy 1 · Who this policy covers</span></label><label><input data-policy-section="privacy" value="2" type="checkbox" /> <span data-i18n="onboarding.privacy2">Privacy 2 · Information we collect</span></label><label><input data-policy-section="privacy" value="3" type="checkbox" /> <span data-i18n="onboarding.privacy3">Privacy 3 · Why we use information</span></label><label><input data-policy-section="privacy" value="4" type="checkbox" /> <span data-i18n="onboarding.privacy4">Privacy 4 · Sharing and providers</span></label><label><input data-policy-section="privacy" value="5" type="checkbox" /> <span data-i18n="onboarding.privacy5">Privacy 5 · Retention</span></label><label><input data-policy-section="privacy" value="6" type="checkbox" /> <span data-i18n="onboarding.privacy6">Privacy 6 · Security</span></label><label><input data-policy-section="privacy" value="7" type="checkbox" /> <span data-i18n="onboarding.privacy7">Privacy 7 · Cookies and storage</span></label><label><input data-policy-section="privacy" value="8" type="checkbox" /> <span data-i18n="onboarding.privacy8">Privacy 8 · Rights and choices</span></label><label><input data-policy-section="privacy" value="9" type="checkbox" /> <span data-i18n="onboarding.privacy9">Privacy 9 · Children and international use</span></label><label><input data-policy-section="privacy" value="10" type="checkbox" /> <span data-i18n="onboarding.privacy10">Privacy 10 · Updates and contact</span></label>
+            </div>
+            <button class="site-button" id="completeOnboarding" type="submit" data-i18n="onboarding.createContinue">Create account and continue →</button>
+          </form>
+        </section>
+      </main>
+
+      <footer class="site-footer"><span data-i18n="onboarding.footer">ChestPlayer · Your wallet stays yours.</span><span><a href="termsofuse.html">Terms</a> · <a href="privacypolicy.html">Privacy</a> · <a href="support.html" data-i18n="site.support">Support</a></span></footer>
+    </div>
+    <script src="auth-config.js"></script>
+    <script src="i18n.js"></script>
+    <script src="onboarding.js"></script>
+    <script src="error-catalog.js?v=20261022-error-catalog"></script>
+    <script type="module" src="auth.js?v=20261025-auth10"></script>
+  </body>
+</html>

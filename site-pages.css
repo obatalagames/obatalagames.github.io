@@ -1,0 +1,349 @@
+/* Small shared shell for pages that do not need the full game dashboard. */
+body.site-page {
+  min-height: 100vh;
+  margin: 0;
+  color: #eef3ff;
+  background: #070b16;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.site-page-shell {
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 24px 0 56px;
+}
+
+.site-header,
+.site-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.site-header {
+  padding: 4px 0 28px;
+  border-bottom: 1px solid rgba(170, 190, 230, .14);
+}
+
+.site-footer {
+  margin-top: 34px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(170, 190, 230, .14);
+  color: #8c99b7;
+  font-size: .88rem;
+}
+
+.site-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: #f8fbff;
+  text-decoration: none;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+
+.site-brand-mark {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid rgba(86, 226, 210, .55);
+  border-radius: 13px;
+  color: #77f5df;
+  background: linear-gradient(145deg, rgba(59, 207, 190, .18), rgba(123, 103, 255, .25));
+  box-shadow: 0 10px 30px rgba(52, 201, 190, .12);
+  font-size: 1.35rem;
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.site-nav a,
+.site-link,
+.site-footer a {
+  color: #b9c6e4;
+  text-decoration: none;
+}
+
+.site-nav a,
+.site-nav button,
+.site-link-button {
+  padding: 9px 13px;
+  border: 1px solid rgba(163, 184, 225, .18);
+  border-radius: 10px;
+  color: #cbd7f2;
+  background: rgba(16, 24, 45, .76);
+  font: inherit;
+  cursor: pointer;
+}
+
+.site-nav a:hover,
+.site-nav button:hover,
+.site-link:hover,
+.site-footer a:hover {
+  color: #fff;
+  border-color: rgba(119, 245, 223, .55);
+}
+
+.site-locale {
+  padding: 8px 10px;
+  border: 1px solid rgba(163, 184, 225, .18);
+  border-radius: 10px;
+  color: #cbd7f2;
+  background: #10182d;
+}
+
+.site-main {
+  padding: 54px 0 0;
+}
+
+.site-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr);
+  align-items: center;
+  gap: 42px;
+}
+
+.site-hero h1,
+.site-page-title {
+  max-width: 760px;
+  margin: 10px 0 18px;
+  color: #f5f8ff;
+  font-size: clamp(2.4rem, 7vw, 5.2rem);
+  line-height: .98;
+  letter-spacing: -.055em;
+}
+
+.site-page-title {
+  font-size: clamp(2.1rem, 5vw, 3.8rem);
+}
+
+.site-hero p,
+.site-page-intro {
+  max-width: 650px;
+  color: #aab6d2;
+  font-size: 1.08rem;
+  line-height: 1.65;
+}
+
+.site-kicker {
+  color: #7bf1de;
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.site-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.site-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 12px;
+  color: #061016;
+  background: linear-gradient(135deg, #74f6df, #7f9bff);
+  box-shadow: 0 14px 30px rgba(85, 220, 210, .18);
+  font: inherit;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.site-button.secondary {
+  color: #dce7ff;
+  background: rgba(19, 29, 55, .9);
+  border: 1px solid rgba(163, 184, 225, .24);
+  box-shadow: none;
+}
+
+.site-status {
+  min-height: 22px;
+  margin-top: 16px;
+  color: #9aa9c9;
+  font-size: .9rem;
+}
+
+.site-visual {
+  min-height: 290px;
+  padding: 28px;
+  border: 1px solid rgba(131, 159, 221, .2);
+  border-radius: 28px;
+  background: radial-gradient(circle at 50% 35%, rgba(102, 129, 255, .22), transparent 48%), linear-gradient(145deg, rgba(18, 29, 57, .98), rgba(9, 16, 33, .92));
+  box-shadow: 0 28px 80px rgba(0, 0, 0, .24);
+}
+
+.site-orbit {
+  display: grid;
+  min-height: 234px;
+  place-items: center;
+  border: 1px solid rgba(119, 245, 223, .28);
+  border-radius: 50%;
+  background: repeating-radial-gradient(circle, transparent 0 35px, rgba(119, 245, 223, .08) 36px 37px), conic-gradient(from 15deg, rgba(119, 245, 223, .18), rgba(127, 155, 255, .18), rgba(248, 198, 91, .18), rgba(119, 245, 223, .18));
+  color: #f6f8ff;
+  text-align: center;
+}
+
+.site-orbit strong { display: block; font-size: 3.4rem; letter-spacing: -.08em; }
+.site-orbit span { color: #aab6d2; font-size: .78rem; letter-spacing: .16em; text-transform: uppercase; }
+
+.site-cards,
+.site-faq-grid,
+.site-support-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 38px;
+}
+
+.site-card,
+.site-form-card,
+.site-legal-card {
+  padding: 24px;
+  border: 1px solid rgba(163, 184, 225, .16);
+  border-radius: 18px;
+  background: rgba(13, 21, 41, .8);
+}
+
+.site-card h2,
+.site-card h3,
+.site-form-card h2,
+.site-legal-card h2 {
+  margin: 0 0 10px;
+  color: #f4f7ff;
+}
+
+.site-card p,
+.site-form-card p,
+.site-legal-card p,
+.site-legal-card li {
+  color: #aab6d2;
+  line-height: 1.65;
+}
+
+.site-card .site-kicker { margin-bottom: 12px; }
+
+.site-page-heading {
+  max-width: 760px;
+  margin-bottom: 30px;
+}
+
+.site-faq-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.site-support-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.site-faq-grid .site-card h2 { font-size: 1.12rem; }
+
+.onboarding-page .site-main { max-width: 860px; margin: 0 auto; }
+.onboarding-form { display: grid; gap: 18px; }
+.onboarding-form .onboarding-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.onboarding-form .onboarding-grid .input-label { display: grid; gap: 7px; }
+.onboarding-form input,
+.onboarding-form select {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(163, 184, 225, .22);
+  border-radius: 10px;
+  color: #f2f5ff;
+  background: #101a33;
+  font: inherit;
+}
+.onboarding-form input:disabled { opacity: .72; }
+.site-checklist { display: grid; gap: 10px; color: #c3cde4; }
+.site-checklist label { display: flex; align-items: flex-start; gap: 9px; line-height: 1.45; }
+.site-checklist input { width: auto; min-height: auto; margin-top: 4px; }
+.site-checklist a { color: #7bf1de; }
+.site-policy-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; max-height: 250px; overflow: auto; padding: 12px; border: 1px solid rgba(163, 184, 225, .12); border-radius: 12px; color: #9eabc9; font-size: .9rem; }
+.site-policy-list label { display: flex; gap: 8px; }
+.site-policy-list input { width: auto; min-height: auto; }
+
+.auth-modal-card { width: min(100%, 460px); max-width: 460px; margin: 10vh auto; }
+.site-modal { position: fixed; inset: 0; z-index: 20; display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; justify-items: center; padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left)); overflow: auto; overscroll-behavior: contain; background: rgba(3, 7, 16, .84); }
+.site-modal[hidden] { display: none; }
+.site-modal .modal-card { padding: 28px; border: 1px solid rgba(163, 184, 225, .22); border-radius: 22px; background: #0c1428; box-shadow: 0 30px 90px rgba(0, 0, 0, .48); }
+.site-modal .modal-close { float: right; border: 0; color: #aab6d2; background: transparent; font-size: 1.6rem; cursor: pointer; }
+.auth-state { display: flex; gap: 8px; align-items: center; min-width: 0; margin-top: 16px; color: #9eabc9; font-size: .9rem; }
+.auth-state > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+.auth-account { display: flex; align-items: center; justify-content: space-between; min-width: 0; gap: 12px; margin-top: 14px; padding: 12px; border-radius: 12px; background: rgba(119, 245, 223, .08); }
+.auth-account > div { min-width: 0; }
+.wallet-login-button { display: flex; align-items: center; width: 100%; gap: 12px; margin-top: 12px; padding: 14px; border: 1px solid rgba(163, 184, 225, .2); border-radius: 12px; color: #eff4ff; background: #111d39; text-align: left; cursor: pointer; }
+.wallet-login-button strong, .wallet-login-button small { display: block; }
+.wallet-login-button small { margin-top: 3px; color: #93a1c0; }
+.wallet-button-mark { color: #77f5df; font-size: 1.3rem; }
+.wallet-arrow { margin-left: auto; color: #77f5df; }
+.auth-divider { margin: 14px 0; color: #6f7c9b; font-size: .75rem; text-align: center; }
+.fine-print { color: #8492b2; font-size: .82rem; line-height: 1.5; }
+.fine-print a { color: #77f5df; }
+
+@media (max-width: 820px) {
+  .site-header, .site-footer { align-items: flex-start; flex-direction: column; }
+  .site-nav { justify-content: flex-start; }
+  .site-hero, .site-cards, .site-faq-grid, .site-support-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 580px) {
+  .site-page-shell { width: min(100% - 22px, 1120px); padding-top: 14px; }
+  .site-main { padding-top: 34px; }
+  .onboarding-form .onboarding-grid, .site-policy-list { grid-template-columns: 1fr; }
+  .site-hero h1 { font-size: 2.8rem; }
+}
+
+/* Responsive page contract for landing, onboarding, policies, FAQ, and support. */
+@media (max-width: 680px) {
+  body.site-page { overflow-x: hidden; }
+  .site-page-shell { width: min(calc(100% - 24px), 1120px); padding-top: 14px; padding-bottom: 34px; }
+  .site-header { gap: 14px; padding-bottom: 16px; }
+  .site-brand { font-size: .9rem; }
+  .site-brand-mark { width: 34px; height: 34px; }
+  .site-nav { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .site-nav a { display: flex; align-items: center; justify-content: center; min-height: 44px; }
+  .site-locale { width: 100%; min-height: 44px; grid-column: 1 / -1; }
+  .site-main { padding-top: 32px; }
+  .site-hero { gap: 22px; }
+  .site-hero h1 { font-size: clamp(2.55rem, 13vw, 4rem); }
+  .site-hero p, .site-page-intro { font-size: 1rem; }
+  .site-visual { min-height: 220px; padding: 18px; border-radius: 20px; }
+  .site-orbit { min-height: 180px; }
+  .site-orbit strong { font-size: 2.8rem; }
+  .site-actions { display: grid; grid-template-columns: 1fr; }
+  .site-button { width: 100%; min-height: 48px; }
+  .site-cards, .site-faq-grid, .site-support-grid { gap: 12px; margin-top: 24px; }
+  .site-card, .site-form-card, .site-legal-card { padding: 18px; border-radius: 14px; }
+  .site-footer { gap: 8px; }
+  .onboarding-form .onboarding-grid, .site-policy-list { grid-template-columns: 1fr; }
+  .site-modal { padding: 8px; }
+  .site-modal .modal-card {
+    max-height: calc(100vh - 16px);
+    max-height: calc(100dvh - 16px);
+    overflow: auto;
+    padding: 20px 16px;
+    border-radius: 14px;
+  }
+  .auth-modal-card { width: 100%; margin: 0 auto; }
+  .wallet-login-button { min-height: 56px; }
+  .wallet-mobile-button { min-height: 56px; }
+  .auth-account { align-items: stretch; flex-direction: column; }
+  .auth-account button { width: 100%; min-height: 44px; }
+  .site-checklist label, .site-policy-list label { min-height: 44px; align-items: center; }
+  .site-checklist input, .site-policy-list input { width: 20px; height: 20px; flex: 0 0 20px; }
+}
+
+@media (min-width: 681px) and (max-width: 820px) {
+  .site-nav { gap: 6px; }
+  .site-nav a, .site-locale { min-height: 42px; }
+}

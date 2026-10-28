@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en" data-i18n-title="meta.title.index">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#070b16" />
+    <meta name="description" content="ChestPlayer — fast trivia, friendly competition, and scheduled five-player matches." />
+    <title>ChestPlayer — Think fast. Play fair.</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="site-pages.css" />
+  </head>
+  <body class="site-page">
+    <div class="site-page-shell">
+      <header class="site-header">
+        <a class="site-brand" href="index.html" aria-label="ChestPlayer home"><span class="site-brand-mark">ϟ</span><span>CHESTPLAYER</span></a>
+        <nav class="site-nav" aria-label="Site navigation">
+          <a href="faq.html" data-i18n="nav.faq">FAQ</a>
+          <a href="support.html" data-i18n="site.support">Support</a>
+          <select class="site-locale" id="localeSelect" aria-label="Language"><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="it">Italiano</option><option value="el">Ελληνικά</option><option value="de">Deutsch</option><option value="cs">Čeština</option><option value="pl">Polski</option><option value="tr">Türkçe</option><option value="ru">Русский</option></select>
+        </nav>
+      </header>
+
+      <main class="site-main">
+        <section class="site-hero">
+          <div>
+            <div class="site-kicker" data-i18n="landing.kicker">CHESTPLAYER · FAST TRIVIA · FAIR PLAY</div>
+            <h1><span data-i18n="landing.title">Think fast.</span><br /><em data-i18n="landing.titleEmphasis">Play fair.</em></h1>
+            <p data-i18n="landing.copy">Quick 1-on-1 trivia and scheduled five-player boards. Simple rules, ten-second turns, and payouts sent only to your linked wallet.</p>
+            <div class="site-actions">
+              <button class="site-button" id="authTrigger" type="button" data-i18n="auth.signInSignUp">Sign in / Sign up</button>
+              <a class="site-button secondary" href="faq.html" data-i18n="format.how">How it works ↗</a>
+            </div>
+            <div class="site-status" id="routeStatus" role="status" aria-live="polite" data-i18n="landing.status">Connect your wallet to sign in or create an account.</div>
+          </div>
+          <div class="site-visual" aria-hidden="true"><div class="site-orbit"><div><strong>10s</strong><span>one question at a time</span></div></div></div>
+        </section>
+
+        <section class="site-cards" aria-label="Game formats">
+          <article class="site-card"><div class="site-kicker" data-i18n="landing.quickKicker">1 · QUICK DUEL</div><h2 data-i18n="landing.quickTitle">10-10 Flash Trivia</h2><p data-i18n="landing.quickCopy">Ten easy-to-medium multiple-choice questions. Miss or time out and the same question goes to your opponent.</p><a class="site-link" data-requires-auth="true" href="dashboard.html?view=flash" data-i18n="landing.quickLink">Find a match →</a></article>
+          <article class="site-card"><div class="site-kicker" data-i18n="landing.scheduledKicker">2 · SCHEDULED MATCH</div><h2 data-i18n="landing.scheduledTitle">5x5 ChestPlayer</h2><p data-i18n="landing.scheduledCopy">Five seats, a $25–$100 USDT entry, and a 25-clue write-in board. A new room opens every 15 minutes from 6 AM through midnight Central Time.</p><a class="site-link" data-requires-auth="true" href="dashboard.html?view=box" data-i18n="landing.scheduledLink">See scheduled matches →</a></article>
+          <article class="site-card"><div class="site-kicker" data-i18n="landing.walletKicker">3 · READY WHEN YOU ARE</div><h2 data-i18n="landing.walletTitle">One wallet, one destination</h2><p data-i18n="landing.walletCopy">Your wallet signs in, your account is created automatically, and payouts go only to the wallet saved during setup.</p><a class="site-link" href="support.html" data-i18n="landing.walletLink">Get help →</a></article>
+        </section>
+      </main>
+
+      <footer class="site-footer"><span data-i18n="landing.footer">CHESTPLAYER · Think fast. Play fair.</span><span><a href="termsofuse.html">Terms</a> · <a href="privacypolicy.html">Privacy</a> · <a href="support.html" data-i18n="site.support">Support</a></span></footer>
+    </div>
+
+    <div class="site-modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle" hidden>
+      <div class="modal-card auth-modal-card">
+        <button class="modal-close" data-close-auth aria-label="Close sign-in dialog">×</button>
+        <div class="site-kicker" data-i18n="auth.modalEyebrow">WALLET SIGN-IN</div>
+        <h2 id="authModalTitle" data-i18n="auth.modalTitle">Enter the arena</h2>
+        <p data-i18n="auth.modalCopy">Sign in or create your account with MetaMask. Approve the sign-in message in MetaMask; your private key stays in your wallet.</p>
+        <button class="wallet-login-button" id="signInMetaMask" type="button"><span class="wallet-button-mark">◇</span><span><strong>Continue with MetaMask</strong><small>Sign in securely with MetaMask</small></span><span class="wallet-arrow">→</span></button>
+        <button class="wallet-mobile-button" id="openMetaMaskMobile" type="button" hidden><span class="wallet-button-mark">↗</span><span><strong data-i18n="auth.mobileOpen">Open in MetaMask</strong><small data-i18n="auth.mobileHint">On your phone, open ChestPlayer inside MetaMask's in-app browser to connect your wallet.</small></span><span class="wallet-arrow">→</span></button>
+        <div id="authWalletList" hidden></div>
+        <div class="auth-state" id="authState"><span class="status-dot"></span><span data-i18n="auth.connectWallet">Connect a wallet to continue.</span></div>
+        <div class="auth-account" id="authAccount" hidden><div><small data-i18n="auth.connectedWallet">CONNECTED WALLET</small><strong id="authWalletAddress">—</strong></div><button class="site-link-button" id="signOutAuth" type="button" data-i18n="auth.signOut">Sign out</button></div>
+        <p class="fine-print" data-i18n="auth.fine">New players review the Terms of Use and Privacy Policy before their account is created.</p>
+      </div>
+    </div>
+
+    <script src="auth-config.js"></script>
+    <script src="i18n.js"></script>
+    <script src="site-router.js"></script>
+    <script src="error-catalog.js?v=20261022-error-catalog"></script>
+    <script type="module" src="auth.js?v=20261025-auth10"></script>
+  </body>
+</html>
