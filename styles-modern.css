@@ -1,0 +1,122 @@
+/* ChestPlayer / Discobolus · contemporary warm minimalism.
+   An additive visual layer only. Game layout, timers, the 5×5 board, and the daily wheel remain in the original stylesheets. */
+:root {
+  color-scheme: light;
+  --bg: #f7f9f5; --bg-deep: #f0f4ed;
+  --panel: #ffffff; --panel-solid: #ffffff; --panel-soft: #f2f6f0;
+  --line: #dce6da; --line-strong: #b9cdbd;
+  --text: #14231c; --muted: #53675a; --faint: #748577;
+  --teal: #135d42; --teal-deep: #0e4832; --gold: #ad8333;
+  --purple: #496e5b; --purple-deep: #365743;
+  --orange: #a96e3b; --danger: #b3474e;
+  --shadow: 0 16px 50px rgba(29,56,39,.075);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+html { background: var(--bg); scroll-behavior: smooth; }
+body, body.site-page, body.policy-page { color: var(--text); background: var(--bg); }
+body.site-page { background-image: radial-gradient(circle at 93% 1%,rgba(210,234,210,.65),transparent 29rem); }
+body, p, input, select, textarea, button { font-size: clamp(13px, .85rem, 16px); }
+:where(button, input, select, textarea, a):focus-visible { outline: 3px solid #6aa783; outline-offset: 3px; }
+a { color: var(--teal); }
+.app-shell { background: var(--bg); }
+.sidebar { background: #ffffff; border-color: var(--line); }
+.panel,.hero-card,.site-card,.site-form-card,.site-legal-card,.stat-card,.market-row,.faq-card,.policy-card {
+  background: #fff; color: var(--text); border-color: var(--line); box-shadow: 0 9px 34px rgba(32,63,42,.045);
+  border-radius: 20px;
+}
+.sidebar a,.nav-item,.site-nav a,.site-footer a,.site-link { color: var(--muted); }
+.nav-item:hover,.nav-item.active,.sidebar a.active { background: #e9f2e9; color: var(--teal); }
+.site-page-shell { width: min(1180px,calc(100% - 36px)); padding-top: 12px; }
+.site-header { padding: 14px 0 23px; border-color: var(--line); }
+.site-footer { color: var(--muted); border-color: var(--line); }
+.site-brand { gap: 9px; color: var(--text); font-size: 1.2rem; font-weight: 850; letter-spacing: -.04em; }
+.site-brand-mark, .brand-mark.discobolus-brand-mark { width: 42px; height: 46px; overflow: visible; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
+.site-brand-mark img, .brand-mark.discobolus-brand-mark img { width: 100%; height: 100%; object-fit: contain; background: transparent; border: 0; border-radius: 0; }
+.site-nav { gap: 10px; }
+.site-nav a, .site-nav button, .site-link-button,.site-locale {
+  color: var(--text); border-color: var(--line); border-radius: 999px; background: #fff; padding: 10px 14px; font-size: .92rem;
+}
+.site-nav a:hover,.site-nav button:hover,.site-link:hover,.site-footer a:hover { color: var(--teal); background: #eff6ec; border-color: #8bad93; }
+.site-locale, #localeSelect { color: var(--text); background: #fff; border-color: var(--line); border-radius: 999px; min-height: 42px; }
+.site-main { padding-top: clamp(34px, 5vw, 65px); }
+.site-hero { gap: clamp(20px, 5vw, 60px); }
+.site-hero h1,.site-page-title { color: var(--text); font-size: clamp(2.75rem, 6.9vw, 6.1rem); line-height: 1.02; letter-spacing: -.07em; font-weight: 820; }
+.site-hero h1 em { color: var(--teal); }
+.site-hero p,.site-page-intro,.site-card p,.site-form-card p,.site-legal-card p,.site-legal-card li { color: var(--muted); }
+.site-kicker,.eyebrow { color: var(--teal); letter-spacing: .095em; }
+.site-button, .primary-button, .button.primary, .small-primary, button.primary {
+  border-radius: 999px; color: #fff; background: var(--teal); border-color: var(--teal);
+  box-shadow: 0 12px 24px rgba(19,93,66,.11); font-weight: 750;
+}
+.site-button:hover,.primary-button:hover,.button.primary:hover { background: var(--teal-deep); color: #fff; }
+.site-button.secondary, .button.secondary, .small-outline, button.secondary { color: var(--text); background: #fff; border: 1px solid var(--line); box-shadow: none; border-radius: 999px; }
+.site-button.secondary:hover,.button.secondary:hover { color: var(--teal); background: #edf5ed; }
+.site-status,.site-faq-grid p,.site-support-grid p { color: var(--muted); }
+.site-visual { border: 0; background: radial-gradient(circle,#e1eee0 0%,#edf5e9 54%,transparent 72%); box-shadow: none; border-radius: 40px; }
+.discobolus-hero-visual { min-height: 410px; display: flex; align-items: center; justify-content: center; }
+.discobolus-hero-art { max-height: 400px; width: auto; max-width: min(100%,440px); object-fit: contain; mix-blend-mode: multiply; }
+.site-orbit { border-color: #bfdbc4; color: var(--teal); background: #e8f3e6; }
+.site-orbit span { color: var(--muted); }
+.site-cards { gap: 18px; margin-top: 44px; }
+.site-card { padding: 26px; transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease; }
+.site-card:hover { border-color: #a7c9af; box-shadow: 0 15px 38px rgba(34,76,49,.09); transform: translateY(-2px); }
+.site-card h2,.site-card h3,.site-form-card h2,.site-legal-card h2 { color: var(--text); letter-spacing: -.035em; }
+.site-card .site-kicker { color: var(--teal); }
+.site-modal,.modal-backdrop { backdrop-filter: blur(10px); }
+.modal-card,.auth-modal-card { color: var(--text); background: #fff; border: 1px solid var(--line); box-shadow: 0 22px 75px rgba(19,42,28,.17); border-radius: 24px; }
+.modal-card h2,.modal-card h3,.auth-modal-card h2 { color: var(--text); }
+.wallet-login-button { background: #eef6ee; border-color: #c6ddc9; color: var(--text); border-radius: 16px; }
+.auth-state,.auth-account,.fine-print { color: var(--muted); }
+input:not([type=checkbox]),textarea,select,.payout-source-select,.deposit-address {
+  color: var(--text); background: #fff; border: 1px solid var(--line); border-radius: 12px;
+}
+input::placeholder,textarea::placeholder { color: #8b9b8b; }
+input[type=checkbox], input[type=radio] { accent-color: var(--teal); }
+button:disabled { opacity: .55; }
+/* Dashboard and games: preserve all original interactive controls and layout. */
+.hero,.dashboard-hero,.hero-copy { color: var(--text); }
+.hero-copy h3,.view-heading h2,.panel-heading h3,.section-head h2,.site-page-heading h1 { color: var(--text); }
+.hero-copy > p,.hero-micro,.muted,.fine-print,.panel-heading p,.market-copy,.input-label { color: var(--muted); }
+.hero-card,.lobby-strip { border: 1px solid var(--line); background: #fff; box-shadow: var(--shadow); }
+.stat,.stat-card,.server-match-row,.deposit-route,.deposit-address,.policy-consents,.account-card,.balance-card { background: #f9fbf8; border-color: var(--line); color: var(--text); }
+.market-row,.market-item,.category-card,.format-card,.box-tile { border-color: var(--line); }
+.market-row,.market-item { background: #fff; }
+.server-match-row strong,.deposit-route-head strong,.stat-card strong { color: var(--text); }
+.brand-lockup { color: var(--text); }
+.brand-lockup h1,.brand-lockup strong { color: var(--text); }
+.nav-item span,.nav-item strong { color: inherit; }
+.nav-icon,.mini-dot,.status-dot { color: var(--teal); }
+.wallet-login-button strong { color: var(--text); }
+.status-pill,.secure-chip,.secure-badge { color: var(--teal); background: #edf6ed; border-color: #c8dec8; }
+.daily-gift { border-color: #dcd6bd; background: linear-gradient(120deg,#fff8ea,#f3f8ee 65%,#fff); }
+.daily-gift h2,.daily-gift h3,.daily-gift strong { color: var(--text); }
+.daily-gift p { color: var(--muted); }
+.daily-wheel { box-shadow: 0 0 0 10px rgba(173,131,51,.07),0 12px 38px rgba(70,60,30,.18); }
+.daily-wheel-core { background: var(--teal); color: #fff; }
+/* Preserve necessary dark text on the colored Flash/5×5 game-control buttons. */
+.box-board,.board-grid,.answer-grid,.scoreboard,.game-panel { color: var(--text); }
+.box-tile[disabled],.answer-option:disabled { opacity: .64; }
+:where(.box-tile, .answer-option, .primary-button, .site-button):focus-visible { outline: 3px solid #80ae89; outline-offset: 3px; }
+.deposit-warning { color: #8d612a; }
+.deposit-address code, code, pre { direction: ltr; unicode-bidi: isolate; color: var(--teal); }
+html[dir="rtl"] .site-header,html[dir="rtl"] .site-footer { direction: rtl; }
+html[dir="rtl"] .site-actions,html[dir="rtl"] .site-nav { direction: rtl; }
+html[dir="rtl"] .brand-lockup,html[dir="rtl"] .site-brand { flex-direction: row; }
+html[dir="rtl"] input[type=number],html[dir="rtl"] .deposit-address code { direction: ltr; }
+@media (max-width: 760px) {
+  .site-page-shell { width: calc(100% - 28px); }
+  .site-header { align-items: flex-start; gap: 12px; }
+  .site-nav { gap: 5px; }
+  .site-nav a { padding: 8px 10px; }
+  .site-hero { gap: 14px; }
+  .discobolus-hero-visual { min-height: 290px; }
+  .discobolus-hero-art { max-height: 280px; }
+  .site-cards { margin-top: 28px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-card,.site-button,.primary-button { transition: none; }
+  .site-card:hover,.primary-button:hover { transform: none; }
+}
+.catalog-state { grid-column: 1 / -1; display: grid; gap: .65rem; justify-items: start; padding: 1.25rem; border: 1px solid var(--line); border-radius: 1rem; background: rgba(255,255,255,.78); }
+.catalog-state p { margin: 0; color: var(--muted); }
+body.has-open-dialog { overflow: hidden; }

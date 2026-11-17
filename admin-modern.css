@@ -1,0 +1,16 @@
+/* Non-destructive operator UI refresh; only visual rules. */
+:root { color-scheme: light; --bg:#f7f9f5; --panel:#fff; --panel-strong:#fff; --line:#dce6da; --text:#14231c; --muted:#53675a; --faint:#748577; --teal:#135d42; --purple:#496e5b; --gold:#a47930; --red:#b3474e; --shadow:0 14px 50px rgba(27,59,37,.075); }
+body { background:#f7f9f5; color:var(--text); }
+.panel,.stat-card,.queue-item,.detail-panel,.auth-panel,.ops-toolbar { background:#fff; border-color:var(--line); box-shadow:var(--shadow); border-radius:18px; }
+.brand-mark.discobolus-brand-mark { border:0; border-radius:0; background:transparent; box-shadow:none; overflow:visible; }
+.brand-mark.discobolus-brand-mark img { object-fit:contain; border-radius:0; }
+.button,.button.primary { border-radius:999px; }
+.button.primary { background:#135d42; border-color:#135d42; color:#fff; }
+.button.secondary,.button.quiet { background:#edf5ed; border-color:var(--line); color:var(--text); }
+.ops-message,.auth-account,.stat-card { background:#f9fcf8; color:var(--muted); }
+label input,label textarea,label select,.ops-locale select { background:#fff; border-color:var(--line); color:var(--text); border-radius:12px; }
+.secure-chip,.status-pill { background:#eff7ed; border-color:#d3e4d0; color:var(--teal); }
+h1,h2,h3,.stat-card strong { color:var(--text); }
+code { color:var(--teal); }
+:where(button,select,input,textarea,a):focus-visible { outline:3px solid #6ca581; outline-offset:3px; }
+@media (prefers-reduced-motion:reduce) { * { transition:none !important; } }
